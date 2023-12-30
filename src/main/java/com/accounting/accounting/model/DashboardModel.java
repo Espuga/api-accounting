@@ -8,7 +8,6 @@ import java.util.Map;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import tech.tablesaw.aggregate.AggregateFunctions;
 import tech.tablesaw.api.Row;
 import tech.tablesaw.api.Table;
 

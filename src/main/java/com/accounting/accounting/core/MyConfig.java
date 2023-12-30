@@ -29,4 +29,22 @@ public class MyConfig {
 	JdbcTemplate produccioJdbcTemplate(@Qualifier("myaccounting") DataSource ds) {
 		return new JdbcTemplate(ds);
 	}
+	
+	@Bean(name = "myproxmox")
+	DataSource myProxmox() {
+		try {
+			DriverManagerDataSource dataSource = new DriverManagerDataSource();
+			dataSource.setDriverClassName("com.mysql.jdbc.Driver");
+	        dataSource.setUrl("jdbc:mysql://192.168.1.48:3306/proxmox"); 
+			dataSource.setUsername("marc");
+			dataSource.setPassword("perprotegir");
+			return dataSource;
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	@Bean(name = "jdbcproxmox")
+	JdbcTemplate proxmoxJdbcTemplate(@Qualifier("myproxmox") DataSource ds) {
+		return new JdbcTemplate(ds);
+	}
 }

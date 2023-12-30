@@ -16,6 +16,7 @@ public class DashboardService {
 	@Qualifier("jdbcaccounting")
 	JdbcTemplate myAccounting;
 	
+	
 	public Map<String, Object> getInit(){
 		return DashboardModel.getInit(myAccounting);
 	}
