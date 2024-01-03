@@ -16,9 +16,9 @@ public class MyConfig {
 		try {
 			DriverManagerDataSource dataSource = new DriverManagerDataSource();
 			dataSource.setDriverClassName("com.mysql.jdbc.Driver");
-	        dataSource.setUrl("jdbc:mysql://localhost:3306/accounting"); 
-			dataSource.setUsername("marc2");
-			dataSource.setPassword("marc1234");
+	        dataSource.setUrl("jdbc:mysql://192.168.1.48:3306/accounting"); 
+			dataSource.setUsername("marc");
+			dataSource.setPassword("perprotegir");
 			return dataSource;
 		} catch (Exception e) {
 			return null;
