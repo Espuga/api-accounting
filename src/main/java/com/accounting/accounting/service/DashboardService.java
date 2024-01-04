@@ -17,11 +17,15 @@ public class DashboardService {
 	JdbcTemplate myAccounting;
 	
 	
-	public Map<String, Object> getInit(){
-		return DashboardModel.getInit(myAccounting);
+	public Map<String, Object> getInit(Integer groupId){
+		return DashboardModel.getInit(myAccounting, groupId);
 	}
 	
 	public Map<String, Object> setTransaction(TransactionData transactionData){
 		return DashboardModel.setTransaction(myAccounting, transactionData);
+	}
+	
+	public Map<String, Object> getGroups(String token) {
+		return DashboardModel.getGroups(myAccounting, token);
 	}
 }

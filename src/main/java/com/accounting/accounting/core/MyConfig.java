@@ -16,7 +16,8 @@ public class MyConfig {
 		try {
 			DriverManagerDataSource dataSource = new DriverManagerDataSource();
 			dataSource.setDriverClassName("com.mysql.jdbc.Driver");
-	        dataSource.setUrl("jdbc:mysql://192.168.1.48:3306/accounting"); 
+	        //dataSource.setUrl("jdbc:mysql://192.168.1.48:3306/accounting"); 
+			dataSource.setUrl("jdbc:mysql://10.23.0.80:3306/accounting"); 
 			dataSource.setUsername("marc");
 			dataSource.setPassword("perprotegir");
 			return dataSource;
@@ -35,7 +36,8 @@ public class MyConfig {
 		try {
 			DriverManagerDataSource dataSource = new DriverManagerDataSource();
 			dataSource.setDriverClassName("com.mysql.jdbc.Driver");
-	        dataSource.setUrl("jdbc:mysql://192.168.1.48:3306/proxmox"); 
+	        //dataSource.setUrl("jdbc:mysql://192.168.1.48:3306/proxmox"); 
+			dataSource.setUrl("jdbc:mysql://10.23.0.80:3306/proxmox"); 
 			dataSource.setUsername("marc");
 			dataSource.setPassword("perprotegir");
 			return dataSource;

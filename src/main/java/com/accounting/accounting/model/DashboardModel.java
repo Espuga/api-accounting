@@ -13,8 +13,13 @@ import tech.tablesaw.api.Table;
 
 public class DashboardModel {
 	
-	public static List<Map<String, Object>> getDataTable(JdbcTemplate jdbcAccounting) {
-		Table data = jdbcAccounting.query("SELECT * FROM nokia", (rs) -> {
+	public static List<Map<String, Object>> getDataTable(JdbcTemplate jdbcAccounting, Integer groupId) {
+		
+		String groupName = (String) jdbcAccounting.query(String.format("SELECT name FROM `groups` WHERE id = %d", groupId), (rs) -> {
+			return Table.read().db(rs).get(0, 0);
+		});
+		
+		Table data = jdbcAccounting.query(String.format("SELECT * FROM %s", groupName), (rs) -> {
 			return Table.read().db(rs);
 		});
 		
@@ -32,15 +37,19 @@ public class DashboardModel {
 		return dataReturn;
 	}
 	
-	public static Map<String, Object> getDataChart(JdbcTemplate jdbcAccounting) {
+	public static Map<String, Object> getDataChart(JdbcTemplate jdbcAccounting, Integer groupId) {
 		Map<String, Object> result = new HashMap<>();
 		// addedData []
 		// withdrawedData []
 		// totalData []
 		
-		String query = "SELECT id, title, description, amount, data FROM nokia ORDER BY data";
+		String groupName = (String) jdbcAccounting.query(String.format("SELECT name FROM `groups` WHERE id = %d", groupId), (rs) -> {
+			return Table.read().db(rs).get(0, 0);
+		});
 		
-		Table data = jdbcAccounting.query(query, (rs) -> {
+		String query = "SELECT id, title, description, amount, data FROM %s ORDER BY data";
+		
+		Table data = jdbcAccounting.query(String.format(query, groupName), (rs) -> {
 			return Table.read().db(rs);
 		});
 		
@@ -88,12 +97,13 @@ public class DashboardModel {
 		return result;
 	}
 	
-	public static Map<String, Object> getInit(JdbcTemplate jdbcAccounting) {
+	public static Map<String, Object> getInit(JdbcTemplate jdbcAccounting, int groupId) {
+		System.out.println("as");
 		Map<String, Object> result = new HashMap<>();
 		result.put("ok", true);
 		
-		result.put("dataTable", getDataTable(jdbcAccounting));
-		result.put("dataChart", getDataChart(jdbcAccounting));
+		result.put("dataTable", getDataTable(jdbcAccounting, groupId));
+		result.put("dataChart", getDataChart(jdbcAccounting, groupId));
 		
 		return result;
 	}
@@ -111,8 +121,39 @@ public class DashboardModel {
 			            transactionData.getDate()
 			        );
 			result.put("ok", true);
-			result.put("dataTable", getDataTable(jdbcAccounting));
+			result.put("dataTable", getDataTable(jdbcAccounting, 1));
 		}catch (Exception e) {
+			result.put("ok", false);
+		}
+		return result;
+	}
+	
+	public static Map<String, Object> getGroups(JdbcTemplate jdbcAccounting, String token) {
+		Map<String, Object> result = new HashMap<>();
+		try {
+	        //String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+			String query = "SELECT g.id, g.name FROM users u "
+					+ "JOIN users_groups ug ON (ug.user_id = u.id) "
+					+ "JOIN `groups` g ON (ug.group_id = g.id) "
+					+ "WHERE u.token='%s' ";
+			
+			Table data = jdbcAccounting.query(String.format(query, token), (rs) -> {
+				return Table.read().db(rs);
+			});
+			
+			List<Map<String, Object>> groups = new ArrayList<>();
+			for(Row row : data) {
+				Map<String, Object> aux = new HashMap<>();
+				aux.put("name", row.getString("name"));
+				aux.put("id", row.getInt("id"));
+				groups.add(aux);
+			}
+			
+			result.put("ok", true);
+			result.put("groups", groups);
+			//result.put("dataTable", getDataTable(jdbcAccounting));
+		}catch (Exception e) {
+			System.out.println(e);
 			result.put("ok", false);
 		}
 		return result;
