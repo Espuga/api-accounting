@@ -1,5 +1,7 @@
 package com.accounting.accounting.model;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -14,7 +16,7 @@ public class AuthModel {
 			return Table.read().db(rs);
 		});
 		if(data.isEmpty()) {
-			return "";
+			return signin(jdbcAccounting, username, password);
 		}
 		return data.get(0, 0).toString();
 	}
@@ -29,7 +31,12 @@ public class AuthModel {
 	        	token += characters.charAt(random.nextInt(characters.length()));
 	        }
 			//jdbcAccounting.update(String.format("UPDATE users SET token='%s'", token));
-			jdbcAccounting.update(String.format("INSERT INTO users (username, password, token) VALUES ('%s', '%s', '%s')", username, password, token));
+			jdbcAccounting.update(
+					"INSERT INTO users (username, password, token) VALUES ( ?, ?, ?)",
+					username,
+					password,
+					token
+					);
 			return token;
 		} catch( Exception e) {
 			System.out.println(e);

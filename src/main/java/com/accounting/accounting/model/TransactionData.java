@@ -7,12 +7,14 @@ public class TransactionData {
     private String description;
     private double amount;
     private Date date;
+    private Integer groupId;
     
-    public TransactionData(String title, String description, double amount, Date date) {
+    public TransactionData(String title, String description, double amount, Date date, Integer groupId) {
         this.title = title;
         this.description = description;
         this.amount = amount;
         this.date = date;
+        this.groupId = groupId;
     }
     
     public String getTitle() {
@@ -26,5 +28,8 @@ public class TransactionData {
     }
     public Date getDate() {
     	return this.date;
+    }
+    public Integer getGroupId() {
+    	return this.groupId;
     }
 }

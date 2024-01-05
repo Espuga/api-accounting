@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import com.accounting.accounting.model.AuthModel;
+import com.accounting.accounting.model.SigninData;
 
 @Service
 public class AuthService {
@@ -16,10 +17,6 @@ public class AuthService {
 	
 	public String login(String username, String password) {
 		return AuthModel.login(myAccounting, username, password);
-	}
-	
-	public String signin(String username, String password) {
-		return AuthModel.signin(myAccounting, username, password);
 	}
 	
 	public String getUsername(String token) {
