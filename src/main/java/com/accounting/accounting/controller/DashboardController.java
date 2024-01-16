@@ -66,5 +66,10 @@ public class DashboardController {
 			) {
 		return dashboardService.changeMembers(token, groupId, users);
 	}
+	
+	@GetMapping("/getTotal")
+	public Map<String, Object> getTotal(@RequestParam("groupId") Integer groupId){
+		return dashboardService.getTotal(groupId);
+	}
 
 }

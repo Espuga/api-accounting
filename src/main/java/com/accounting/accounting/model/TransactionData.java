@@ -8,13 +8,15 @@ public class TransactionData {
     private double amount;
     private Date date;
     private Integer groupId;
+    private String token;
     
-    public TransactionData(String title, String description, double amount, Date date, Integer groupId) {
+    public TransactionData(String title, String description, double amount, Date date, Integer groupId, String token) {
         this.title = title;
         this.description = description;
         this.amount = amount;
         this.date = date;
         this.groupId = groupId;
+        this.token = token;
     }
     
     public String getTitle() {
@@ -31,5 +33,8 @@ public class TransactionData {
     }
     public Integer getGroupId() {
     	return this.groupId;
+    }
+    public String getToken() {
+    	return this.token;
     }
 }

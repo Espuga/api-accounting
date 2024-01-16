@@ -1,6 +1,7 @@
 package com.accounting.accounting.model;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,9 +26,12 @@ public class DashboardModel {
 			return Table.read().db(rs).get(0, 0);
 		});
 		// Get data
-		Table data = jdbcAccounting.query(String.format("SELECT * FROM %s", groupName), (rs) -> {
+		Table data = jdbcAccounting.query(String.format(
+				"SELECT t.id, t.title, t.description, t.amount, t.data, u.username FROM %s t JOIN users u ON (u.id = t.userId) ORDER BY data ", groupName ), (rs) -> {
 			return Table.read().db(rs);
 		});
+		
+		System.out.println(data);
 		
 		// Change data format to return
 		if(!data.isEmpty()) {
@@ -38,6 +42,7 @@ public class DashboardModel {
 				aux.put("description", row.getString("description"));
 				aux.put("amount", row.getDouble("amount"));
 				aux.put("data", row.getDate("data").toString());
+				aux.put("username", row.getString("username"));
 				dataReturn.add(aux);
 			}
 		}
@@ -74,12 +79,20 @@ public class DashboardModel {
 			while(firstMonday.getDayOfWeek().getValue() != 1) {	// Get first monday after first day
 				firstMonday = firstMonday.minusDays(1);
 			}
+			LocalDate firstMonday2 = firstMonday;
 			LocalDate lastDayWeek = firstMonday.plusDays(6);	// Get last day of the week
 			
 			LocalDate currentDate = LocalDate.now();	// Current date
 			
-			while(firstMonday.isBefore(currentDate)) {	// For every week
-				Table current = data.where(data.dateColumn("data").isBetweenIncluding(firstMonday, lastDayWeek));
+			while(firstMonday.isBefore(currentDate) || firstMonday.isEqual(currentDate)) {	// For every week
+				Table current = data.where(data.dateColumn("data").isBetweenIncluding(firstMonday, lastDayWeek).and(data.intColumn("id").isNotEqualTo(33)));
+				Table current2 = data.where(data.dateColumn("data").isBetweenIncluding(firstMonday2, lastDayWeek));
+				
+				if(current.isEmpty()) {
+					dates.add(firstMonday.toString());
+					addedData.add(0.0);		// Add Added Founds
+					withdrawedData.add(0.0);
+				}
 
 				dates.add(firstMonday.toString());	// Add data
 				totalData.add(current.doubleColumn("amount").sum());	// Add Total Founds
@@ -87,6 +100,8 @@ public class DashboardModel {
 				Table withdrawed = current.where(current.doubleColumn("amount").isLessThan(0));
 				addedData.add(added.doubleColumn("amount").sum());		// Add Added Founds
 				withdrawedData.add(Math.abs(withdrawed.doubleColumn("amount").sum()));	// Add Withdrawed Founds
+				
+				totalData.add(current2.doubleColumn("amount").sum());	// Add Total Founds
 				
 				
 				firstMonday = firstMonday.plusDays(7);	// Next monday
@@ -96,7 +111,7 @@ public class DashboardModel {
 		
 		
 		result.put("dates", dates);
-		result.put("totalData", totalData);
+		result.put("totalData", getTotal2(data));
 		result.put("addedData", addedData);
 		result.put("withdrawedData", withdrawedData);
 		
@@ -133,7 +148,9 @@ public class DashboardModel {
 				return Table.read().db(rs).get(0, 0);
 			});
 			
-			String insertQuery = String.format("INSERT INTO %s (title, description, amount, data) values (?, ?, ?, ?)", groupName);
+			
+			String insertQuery = String.format("INSERT INTO %s (title, description, amount, data, userId) "
+					+ "values (?, ?, ?, ?, (SELECT id FROM users where token = '%s'))", groupName, transactionData.getToken());
 			jdbcAccounting.update(
 			            insertQuery,
 			            transactionData.getTitle(),
@@ -190,7 +207,7 @@ public class DashboardModel {
 		
 		// Create new Table
 		String newQuery = "CREATE TABLE %s (id int not null AUTO_INCREMENT, title VARCHAR(50), description VARCHAR(200), amount DOUBLE, "
-				+ "data DATE, PRIMARY KEY(id))";
+				+ "data DATE, userId INTEGER, PRIMARY KEY(id), foreign key(userId) references users(id))";
 		jdbcAccounting.update(String.format(newQuery, groupData.getName()));
 		
 		// Add group in groups table
@@ -224,5 +241,90 @@ public class DashboardModel {
 			}
 		}
 		return true;
+	}
+	
+	public static List<Double> getTotal2(Table data) {
+		List<Double> totalData = new ArrayList<>();			// Total Founds
+		
+		if(!data.isEmpty()) {
+			// Get first monday data
+			LocalDate firstMonday = LocalDate.parse(data.get(0, 4).toString(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));	// Get first day
+
+			while(firstMonday.getDayOfWeek().getValue() != 1) {	// Get first monday after first day
+				firstMonday = firstMonday.minusDays(1);
+			}
+			LocalDate firstMonday2 = firstMonday;
+			LocalDate lastDayWeek = firstMonday.plusDays(6);	// Get last day of the week
+			
+			LocalDate currentDate = LocalDate.now();	// Current date
+			
+			while(firstMonday2.isBefore(currentDate) || firstMonday2.isEqual(currentDate)) {	// For every week
+				Table current = data.where(data.dateColumn("data").isBetweenIncluding(firstMonday, lastDayWeek));
+				
+				if(current.isEmpty()) {
+					totalData.add(0.0);
+				}
+				
+				totalData.add(current.doubleColumn("amount").sum());	// Add Total Founds
+				
+				firstMonday2 = firstMonday2.plusDays(7);
+				lastDayWeek = lastDayWeek.plusDays(7);	// Next day of Week
+			}
+		}
+		return totalData;
+	}
+	
+	public static Map<String, Object> getTotal(JdbcTemplate jdbcAccounting, Integer groupId){
+		Map<String, Object> result = new HashMap<>();
+		result.put("ok", true);
+		
+		String groupName = (String) jdbcAccounting.query(String.format("SELECT name FROM `groups` WHERE id = %d", groupId), (rs) -> {
+			return Table.read().db(rs).get(0, 0);
+		});
+		
+		// Get data
+		String query = "SELECT amount, data FROM %s ORDER BY data";
+		Table data = jdbcAccounting.query(String.format(query, groupName), (rs) -> {
+			return Table.read().db(rs);
+		});
+		
+		List<String> dates = new ArrayList<>();				// xAxis data
+		List<Double> totalData = new ArrayList<>();			// Total Founds
+		
+		if(!data.isEmpty()) {
+			// Get first monday data
+			LocalDate firstMonday = (LocalDate) data.get(0, 1);	// Get first day
+
+			while(firstMonday.getDayOfWeek().getValue() != 1) {	// Get first monday after first day
+				firstMonday = firstMonday.minusDays(1);
+			}
+			LocalDate firstMonday2 = firstMonday;
+			LocalDate lastDayWeek = firstMonday.plusDays(6);	// Get last day of the week
+			
+			LocalDate currentDate = LocalDate.now();	// Current date
+			
+			while(firstMonday2.isBefore(currentDate) || firstMonday2.isEqual(currentDate)) {	// For every week
+				Table current = data.where(data.dateColumn("data").isBetweenIncluding(firstMonday, lastDayWeek));
+				
+				if(current.isEmpty()) {
+					dates.add(firstMonday2.toString());
+					totalData.add(0.0);
+				}
+				
+				dates.add(firstMonday2.toString());	// Add data
+				totalData.add(current.doubleColumn("amount").sum());	// Add Total Founds
+				
+				firstMonday2 = firstMonday2.plusDays(7);
+				lastDayWeek = lastDayWeek.plusDays(7);	// Next day of Week
+			}
+		}
+		
+		
+		result.put("dates", dates);
+		result.put("totalData", totalData);
+		
+		
+		
+		return result;
 	}
 }

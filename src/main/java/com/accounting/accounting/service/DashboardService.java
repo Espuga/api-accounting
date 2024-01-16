@@ -52,4 +52,8 @@ public class DashboardService {
 	public boolean changeMembers(String token, Integer groupId, String users) {
 		return DashboardModel.changeMembers(myAccounting, token, groupId, users);
 	}
+	
+	public Map<String, Object> getTotal(Integer groupId) {
+		return DashboardModel.getTotal(myAccounting, groupId);
+	}
 }
