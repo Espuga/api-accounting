@@ -1,5 +1,7 @@
 package com.accounting.accounting.service;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -15,7 +17,7 @@ public class AuthService {
 	@Qualifier("jdbcaccounting")
 	JdbcTemplate myAccounting;
 	
-	public String login(String username, String password) {
+	public Map<String, Object> login(String username, String password) {
 		return AuthModel.login(myAccounting, username, password);
 	}
 	

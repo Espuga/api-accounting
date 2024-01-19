@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.accounting.accounting.model.AuthModel;
 import com.accounting.accounting.model.CreateGroupData;
@@ -53,7 +54,14 @@ public class DashboardService {
 		return DashboardModel.changeMembers(myAccounting, token, groupId, users);
 	}
 	
-	public Map<String, Object> getTotal(Integer groupId) {
-		return DashboardModel.getTotal(myAccounting, groupId);
+	public Map<String, Object> getUsers(Integer groupId) {
+		return DashboardModel.getUsers(myAccounting, groupId);
+	}
+	
+	public boolean quitUsers(String groupId, String userId) {
+		return DashboardModel.quitUsers(myAccounting, groupId, userId);
+	}
+	public boolean deleteGroup(String groupId) {
+		return DashboardModel.deleteGroup(myAccounting, groupId);
 	}
 }

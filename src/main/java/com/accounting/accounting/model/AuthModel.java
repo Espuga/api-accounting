@@ -1,24 +1,50 @@
 package com.accounting.accounting.model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import tech.tablesaw.api.Row;
 import tech.tablesaw.api.Table;
 
 public class AuthModel {
 
-	public static String login(JdbcTemplate jdbcAccounting, String username, String password) {
-		
-		Table data = jdbcAccounting.query(String.format("SELECT token FROM users WHERE username = '%s' AND password = '%s' ", username, password), (rs) -> {
-			return Table.read().db(rs);
-		});
-		if(data.isEmpty()) {
-			return signin(jdbcAccounting, username, password);
+	public static Map<String, Object> login(JdbcTemplate jdbcAccounting, String username, String password) {
+		Map<String, Object> result = new HashMap<>();
+		try {
+			Table data = jdbcAccounting.query(String.format("SELECT token FROM users WHERE username = '%s' AND password = '%s' ", username, password), (rs) -> {
+				return Table.read().db(rs);
+			});
+			if(data.isEmpty()) {
+				result.put("token", signin(jdbcAccounting, username, password));
+			}else {
+				result.put("token", data.get(0, 0).toString());
+			}
+			
+			// Rights
+			Table rights = jdbcAccounting.query(
+					String.format("SELECT ur.group_id, ur.right_id FROM users_rights ur WHERE ur.user_id = (SELECT id FROM users WHERE username = '%s')", 
+							username), (rs) -> {
+				return Table.read().db(rs);
+			});
+			List<Map<String, Object>> rightsReturn = new ArrayList<>();
+			for(Row row : rights) {
+				Map<String, Object> aux = new HashMap<>();
+				aux.put("group_id", row.getInt("group_id"));
+				aux.put("right_id", row.getInt("right_id"));
+				rightsReturn.add(aux);
+			}
+			result.put("rights", rightsReturn);
+			result.put("ok", true);
+		} catch (Exception e) {
+			System.out.println(e);
+			result.put("ok", false);
 		}
-		return data.get(0, 0).toString();
+		return result;
 	}
 	
 	public static String signin(JdbcTemplate jdbcAccounting, String username, String password) {

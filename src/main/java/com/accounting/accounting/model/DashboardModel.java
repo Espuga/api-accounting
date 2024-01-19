@@ -1,5 +1,6 @@
 package com.accounting.accounting.model;
 
+import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -30,8 +31,6 @@ public class DashboardModel {
 				"SELECT t.id, t.title, t.description, t.amount, t.data, u.username FROM %s t JOIN users u ON (u.id = t.userId) ORDER BY data ", groupName ), (rs) -> {
 			return Table.read().db(rs);
 		});
-		
-		System.out.println(data);
 		
 		// Change data format to return
 		if(!data.isEmpty()) {
@@ -217,7 +216,7 @@ public class DashboardModel {
 				groupData.getToken()
 				);
 		
-		// Add users to table
+		// Add user to table
 		jdbcAccounting.update(
 				"INSERT INTO `users_groups` (user_id, group_id) VALUES "
 				+ "( (SELECT u.id FROM users u WHERE u.token = ?), "
@@ -226,20 +225,45 @@ public class DashboardModel {
 				groupData.getName()
 				);
 		
+		// Add starting amount
+		String insertQuery = String.format("INSERT INTO %s (title, description, amount, data, userId) "
+				+ "values (?, ?, ?, ?, (SELECT id FROM users where token = '%s'))", groupData.getName(), groupData.getToken());
+		jdbcAccounting.update(
+		            insertQuery,
+		            "Starting Amount",
+		            "",
+		            groupData.getAmount(),
+		            LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+		        );
+		
+		// Add rest of users
+		String[] users = groupData.getUsers().strip().split(",");
+		for(String user : users) {
+			jdbcAccounting.update(
+					"INSERT INTO users_groups (user_id, group_id) VALUES "
+					+ "((SELECT id FROM users WHERE username = ?), "
+					+ "(SELECT g.id FROM `groups` g WHERE g.name = ?)) ",
+					user,
+					groupData.getName()
+					);
+		}
+		
+		
 		return true;
 	}
 	
 	public static boolean changeMembers(JdbcTemplate jdbcAccounting, String token, Integer groupId, String users2) {
-		String[] users = users2.split(",");
+		String[] users = users2.strip().split(",");
 		for(String user : users) {
-			user = user.strip();
-			String id = jdbcAccounting.query(String.format("SELECT id FROM users WHERE username = '%s'", user), (rs) -> {
-				return Table.read().db(rs).get(0, 0).toString();
-			});
-			if(!id.isEmpty()) {
-				jdbcAccounting.update("INSERT INTO users_groups (user_id, group_id) VALUES (?, ?)", id, groupId);
-			}
+			jdbcAccounting.update(
+					"INSERT INTO users_groups (user_id, group_id) VALUES "
+					+ "((SELECT id FROM users WHERE username = ?), "
+					+ "?) ",
+					user,
+					groupId
+					);
 		}
+		
 		return true;
 	}
 	
@@ -274,57 +298,66 @@ public class DashboardModel {
 		return totalData;
 	}
 	
-	public static Map<String, Object> getTotal(JdbcTemplate jdbcAccounting, Integer groupId){
+	public static Map<String, Object> getUsers(JdbcTemplate jdbcAccounting, Integer groupId) {
 		Map<String, Object> result = new HashMap<>();
 		result.put("ok", true);
 		
-		String groupName = (String) jdbcAccounting.query(String.format("SELECT name FROM `groups` WHERE id = %d", groupId), (rs) -> {
-			return Table.read().db(rs).get(0, 0);
-		});
+		String query = "SELECT u.id, u.username FROM users_groups ug JOIN users u ON (u.id = ug.user_id) WHERE ug.group_id = %s";
 		
-		// Get data
-		String query = "SELECT amount, data FROM %s ORDER BY data";
-		Table data = jdbcAccounting.query(String.format(query, groupName), (rs) -> {
+		Table data = jdbcAccounting.query(String.format(query, groupId), (rs) -> {
 			return Table.read().db(rs);
 		});
 		
-		List<String> dates = new ArrayList<>();				// xAxis data
-		List<Double> totalData = new ArrayList<>();			// Total Founds
-		
-		if(!data.isEmpty()) {
-			// Get first monday data
-			LocalDate firstMonday = (LocalDate) data.get(0, 1);	// Get first day
-
-			while(firstMonday.getDayOfWeek().getValue() != 1) {	// Get first monday after first day
-				firstMonday = firstMonday.minusDays(1);
-			}
-			LocalDate firstMonday2 = firstMonday;
-			LocalDate lastDayWeek = firstMonday.plusDays(6);	// Get last day of the week
-			
-			LocalDate currentDate = LocalDate.now();	// Current date
-			
-			while(firstMonday2.isBefore(currentDate) || firstMonday2.isEqual(currentDate)) {	// For every week
-				Table current = data.where(data.dateColumn("data").isBetweenIncluding(firstMonday, lastDayWeek));
-				
-				if(current.isEmpty()) {
-					dates.add(firstMonday2.toString());
-					totalData.add(0.0);
-				}
-				
-				dates.add(firstMonday2.toString());	// Add data
-				totalData.add(current.doubleColumn("amount").sum());	// Add Total Founds
-				
-				firstMonday2 = firstMonday2.plusDays(7);
-				lastDayWeek = lastDayWeek.plusDays(7);	// Next day of Week
-			}
+		List<Map<String, Object>> users = new ArrayList<>();
+		for(Row row : data) {
+			Map<String, Object> aux = new HashMap<>();
+			aux.put("id", row.getInt("id"));
+			aux.put("username", row.getString("username"));
+			aux.put("name", row.getString("username"));
+			users.add(aux);
 		}
-		
-		
-		result.put("dates", dates);
-		result.put("totalData", totalData);
-		
-		
+		result.put("users", users);
 		
 		return result;
 	}
+	
+	public static boolean quitUsers(JdbcTemplate jdbcAccounting, String groupId, String userId) {
+		try {
+			jdbcAccounting.update(
+				"DELETE FROM users_groups WHERE user_id = ? AND group_id = ? ",
+				userId,
+				groupId
+				);
+			return true;
+		} catch (Exception e) {
+			System.out.println(e);
+			return false;
+		}
+		
+	}
+	
+	public static boolean deleteGroup(JdbcTemplate jdbcAccounting, String groupId) {
+		try {
+			jdbcAccounting.update(
+					"DELETE FROM users_groups WHERE group_id = ?",
+					groupId
+					);
+			String groupName = (String) jdbcAccounting.query(String.format("SELECT name FROM `groups` WHERE id = %s", groupId), (rs) -> {
+				return Table.read().db(rs).get(0, 0);
+			});
+			jdbcAccounting.update(
+					String.format("DROP TABLE %s", groupName)
+					);
+			jdbcAccounting.update(
+					"DELETE FROM `groups` WHERE id = ?",
+					groupId
+					);
+			
+			return true;
+		} catch (Exception e) {
+			System.out.println(e);
+			return false;
+		}
+	}
+
 }

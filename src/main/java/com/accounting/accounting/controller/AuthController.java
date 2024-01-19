@@ -23,7 +23,7 @@ public class AuthController {
 	AuthService authService;
 	
 	@GetMapping("/login")
-	public String login(@RequestParam("username") String username, @RequestParam("password") String password) {
+	public Map<String, Object> login(@RequestParam("username") String username, @RequestParam("password") String password) {
 		return authService.login(username, password);
 	}
 	
