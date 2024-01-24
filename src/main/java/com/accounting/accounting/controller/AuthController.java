@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.accounting.accounting.model.CreateGroupData;
+import com.accounting.accounting.model.NewAccountData;
 import com.accounting.accounting.model.SigninData;
 import com.accounting.accounting.service.AuthService;
 
@@ -25,6 +27,11 @@ public class AuthController {
 	@GetMapping("/login")
 	public Map<String, Object> login(@RequestParam("username") String username, @RequestParam("password") String password) {
 		return authService.login(username, password);
+	}
+	
+	@PostMapping("/createAccount")
+	public Map<String, Object> createACcount(@RequestBody NewAccountData newAccountData){
+		return authService.createACcount(newAccountData);
 	}
 	
 	@GetMapping("/getUsername")

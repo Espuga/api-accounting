@@ -14,6 +14,27 @@ import tech.tablesaw.api.Row;
 import tech.tablesaw.api.Table;
 
 public class DashboardModel {
+	
+	public static Map<String, Object> getHome(JdbcTemplate jdbcAccounting, Integer groupId) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			String groupName = (String) jdbcAccounting.query(String.format("SELECT name FROM `groups` WHERE id = %d", groupId), (rs) -> {
+				return Table.read().db(rs).get(0, 0);
+			});
+			Table data = jdbcAccounting.query(String.format("SELECT SUM(amount) FROM %s", groupName), (rs) -> {
+				return Table.read().db(rs);
+			});
+			result.put("amount",data.get(0, 0));
+			result.put("ok", true);
+		} catch (Exception e) {
+			System.out.println(e);
+			result.put("ok", false);
+		}
+		
+		return result;
+	}
+	
 	/**
 	 * RETURN TABLE DATA
 	 * @param jdbcAccounting
@@ -28,7 +49,7 @@ public class DashboardModel {
 		});
 		// Get data
 		Table data = jdbcAccounting.query(String.format(
-				"SELECT t.id, t.title, t.description, t.amount, t.data, u.username FROM %s t JOIN users u ON (u.id = t.userId) ORDER BY data ", groupName ), (rs) -> {
+				"SELECT t.id, t.title, t.description, t.amount, t.data, u.name FROM %s t JOIN users u ON (u.id = t.userId) ORDER BY data ", groupName ), (rs) -> {
 			return Table.read().db(rs);
 		});
 		
@@ -41,7 +62,7 @@ public class DashboardModel {
 				aux.put("description", row.getString("description"));
 				aux.put("amount", row.getDouble("amount"));
 				aux.put("data", row.getDate("data").toString());
-				aux.put("username", row.getString("username"));
+				aux.put("name", row.getString("name"));
 				dataReturn.add(aux);
 			}
 		}
@@ -61,6 +82,10 @@ public class DashboardModel {
 			return Table.read().db(rs).get(0, 0);
 		});
 		
+		Table sprints = jdbcAccounting.query("SELECT name, data FROM sprints", (rs) -> {
+			return Table.read().db(rs);
+		});
+		
 		// Get data
 		String query = "SELECT id, title, description, amount, data FROM %s ORDER BY data";
 		Table data = jdbcAccounting.query(String.format(query, groupName), (rs) -> {
@@ -70,47 +95,54 @@ public class DashboardModel {
 		List<String> dates = new ArrayList<>();				// xAxis data
 		List<Double> addedData = new ArrayList<>();			// Added Founds
 		List<Double> withdrawedData = new ArrayList<>();	// Withdrawed Founds
-		List<Double> totalData = new ArrayList<>();			// Total Founds
+		List<Double> totalData = new ArrayList<>();	// Global Founds
 		
 		if(!data.isEmpty()) {
-			// Get first monday data
-			LocalDate firstMonday = (LocalDate) data.get(0, 4);	// Get first day
-			while(firstMonday.getDayOfWeek().getValue() != 1) {	// Get first monday after first day
-				firstMonday = firstMonday.minusDays(1);
-			}
-			LocalDate firstMonday2 = firstMonday;
-			LocalDate lastDayWeek = firstMonday.plusDays(6);	// Get last day of the week
 			
 			LocalDate currentDate = LocalDate.now();	// Current date
 			
-			while(firstMonday.isBefore(currentDate) || firstMonday.isEqual(currentDate)) {	// For every week
-				Table current = data.where(data.dateColumn("data").isBetweenIncluding(firstMonday, lastDayWeek).and(data.intColumn("id").isNotEqualTo(33)));
-				Table current2 = data.where(data.dateColumn("data").isBetweenIncluding(firstMonday2, lastDayWeek));
-				
+			List<LocalDate> sprintsDate = new ArrayList<>();
+			boolean aux = false;
+			for(Row row : sprints) {
+				if(row.getDate("data").isBefore(currentDate) || row.getDate("data").isEqual(currentDate) || aux == true) {
+					sprintsDate.add(row.getDate("data"));
+					if(aux == true) {
+						break;
+					}
+				}else {
+					aux = true;
+				}
+			}
+			
+			for(int i = 1; i < sprintsDate.size(); i++) {
+				Table current = data.where(
+					data.dateColumn("data").isBetweenIncluding(sprintsDate.get(i-1), sprintsDate.get(i).minusDays(1))
+					.and(data.intColumn("id").isNotEqualTo(0))
+					);
+				Table current2 = data.where(
+					data.dateColumn("data").isBetweenIncluding(sprintsDate.get(0), sprintsDate.get(i).minusDays(1)));
+				// System.out.println(current);
+				dates.add(sprints.where(sprints.dateColumn("data").isEqualTo(sprintsDate.get(i-1))).getString(0, "name"));
 				if(current.isEmpty()) {
-					dates.add(firstMonday.toString());
 					addedData.add(0.0);		// Add Added Founds
 					withdrawedData.add(0.0);
+				}else {
+					Table added = current.where(current.doubleColumn("amount").isGreaterThan(0));
+					Table withdrawed = current.where(current.doubleColumn("amount").isLessThan(0));
+					addedData.add(added.doubleColumn("amount").sum());		// Add Added Founds
+					withdrawedData.add(Math.abs(withdrawed.doubleColumn("amount").sum()));	// Add Withdrawed Founds	
 				}
-
-				dates.add(firstMonday.toString());	// Add data
-				totalData.add(current.doubleColumn("amount").sum());	// Add Total Founds
-				Table added = current.where(current.doubleColumn("amount").isGreaterThan(0));
-				Table withdrawed = current.where(current.doubleColumn("amount").isLessThan(0));
-				addedData.add(added.doubleColumn("amount").sum());		// Add Added Founds
-				withdrawedData.add(Math.abs(withdrawed.doubleColumn("amount").sum()));	// Add Withdrawed Founds
-				
-				totalData.add(current2.doubleColumn("amount").sum());	// Add Total Founds
-				
-				
-				firstMonday = firstMonday.plusDays(7);	// Next monday
-				lastDayWeek = lastDayWeek.plusDays(7);	// Next day of Week
+				if(current2.isEmpty()){
+					totalData.add(0.0);
+				}else {
+					totalData.add(current2.doubleColumn("amount").sum());
+				}
 			}
 		}
 		
-		
 		result.put("dates", dates);
-		result.put("totalData", getTotal2(data));
+		// result.put("totalData", getTotal2(data));
+		result.put("totalData", totalData);
 		result.put("addedData", addedData);
 		result.put("withdrawedData", withdrawedData);
 		
@@ -176,7 +208,7 @@ public class DashboardModel {
 		Map<String, Object> result = new HashMap<>();
 		try {
 			// Get groups list
-			String query = "SELECT g.id, g.name FROM users u "
+			String query = "SELECT g.id, g.name, g.admin_id FROM users u "
 					+ "JOIN users_groups ug ON (ug.user_id = u.id) "
 					+ "JOIN `groups` g ON (ug.group_id = g.id) "
 					+ "WHERE u.token='%s' ";
@@ -190,6 +222,7 @@ public class DashboardModel {
 				Map<String, Object> aux = new HashMap<>();
 				aux.put("name", row.getString("name"));
 				aux.put("id", row.getInt("id"));
+				aux.put("admin_id", row.getInt("admin_id"));
 				groups.add(aux);
 			}
 			
@@ -202,7 +235,14 @@ public class DashboardModel {
 		return result;
 	}
 	
-	public static boolean createGroup(JdbcTemplate jdbcAccounting, CreateGroupData groupData) {
+	/**
+	 * CREATE NEW GROUP
+	 * @param jdbcAccounting
+	 * @param groupData
+	 * @return
+	 */
+	public static Map<String, Object> createGroup(JdbcTemplate jdbcAccounting, CreateGroupData groupData) {
+		Map<String, Object> result = new HashMap<>();
 		
 		// Create new Table
 		String newQuery = "CREATE TABLE %s (id int not null AUTO_INCREMENT, title VARCHAR(50), description VARCHAR(200), amount DOUBLE, "
@@ -235,6 +275,16 @@ public class DashboardModel {
 		            groupData.getAmount(),
 		            LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
 		        );
+		jdbcAccounting.update(String.format("UPDATE %s SET id = 0 WHERE id = 1", groupData.getName()));
+		
+		// Add rights to admin user
+		jdbcAccounting.update(
+				String.format(
+						"INSERT INTO users_rights (user_id, group_id, right_id) VALUES "
+						+ "((SELECT id FROM users where token = '%s'), (SELECT g.id FROM `groups` g WHERE g.name = ?), 1)",
+							groupData.getToken()),
+					groupData.getName()
+				);
 		
 		// Add rest of users
 		String[] users = groupData.getUsers().strip().split(",");
@@ -248,10 +298,32 @@ public class DashboardModel {
 					);
 		}
 		
-		
-		return true;
+		// Rights
+		Table rights = jdbcAccounting.query(
+				String.format("SELECT ur.group_id, ur.right_id FROM users_rights ur WHERE ur.user_id = (SELECT id FROM users WHERE token = '%s')", 
+						groupData.getToken()), (rs) -> {
+			return Table.read().db(rs);
+		});
+		List<Map<String, Object>> rightsReturn = new ArrayList<>();
+		for(Row row : rights) {
+			Map<String, Object> aux = new HashMap<>();
+			aux.put("group_id", row.getInt("group_id"));
+			aux.put("right_id", row.getInt("right_id"));
+			rightsReturn.add(aux);
+		}
+		result.put("rights", rightsReturn);
+		result.put("ok", true);
+		return result;
 	}
 	
+	/**
+	 * ADD MEMBERS TO GROUP
+	 * @param jdbcAccounting
+	 * @param token
+	 * @param groupId
+	 * @param users2
+	 * @return
+	 */
 	public static boolean changeMembers(JdbcTemplate jdbcAccounting, String token, Integer groupId, String users2) {
 		String[] users = users2.strip().split(",");
 		for(String user : users) {
@@ -267,42 +339,17 @@ public class DashboardModel {
 		return true;
 	}
 	
-	public static List<Double> getTotal2(Table data) {
-		List<Double> totalData = new ArrayList<>();			// Total Founds
-		
-		if(!data.isEmpty()) {
-			// Get first monday data
-			LocalDate firstMonday = LocalDate.parse(data.get(0, 4).toString(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));	// Get first day
-
-			while(firstMonday.getDayOfWeek().getValue() != 1) {	// Get first monday after first day
-				firstMonday = firstMonday.minusDays(1);
-			}
-			LocalDate firstMonday2 = firstMonday;
-			LocalDate lastDayWeek = firstMonday.plusDays(6);	// Get last day of the week
-			
-			LocalDate currentDate = LocalDate.now();	// Current date
-			
-			while(firstMonday2.isBefore(currentDate) || firstMonday2.isEqual(currentDate)) {	// For every week
-				Table current = data.where(data.dateColumn("data").isBetweenIncluding(firstMonday, lastDayWeek));
-				
-				if(current.isEmpty()) {
-					totalData.add(0.0);
-				}
-				
-				totalData.add(current.doubleColumn("amount").sum());	// Add Total Founds
-				
-				firstMonday2 = firstMonday2.plusDays(7);
-				lastDayWeek = lastDayWeek.plusDays(7);	// Next day of Week
-			}
-		}
-		return totalData;
-	}
-	
+	/**
+	 * GET GROUP USERS
+	 * @param jdbcAccounting
+	 * @param groupId
+	 * @return
+	 */
 	public static Map<String, Object> getUsers(JdbcTemplate jdbcAccounting, Integer groupId) {
 		Map<String, Object> result = new HashMap<>();
 		result.put("ok", true);
 		
-		String query = "SELECT u.id, u.username FROM users_groups ug JOIN users u ON (u.id = ug.user_id) WHERE ug.group_id = %s";
+		String query = "SELECT u.id, u.username, u.name FROM users_groups ug JOIN users u ON (u.id = ug.user_id) WHERE ug.group_id = %s";
 		
 		Table data = jdbcAccounting.query(String.format(query, groupId), (rs) -> {
 			return Table.read().db(rs);
@@ -313,7 +360,7 @@ public class DashboardModel {
 			Map<String, Object> aux = new HashMap<>();
 			aux.put("id", row.getInt("id"));
 			aux.put("username", row.getString("username"));
-			aux.put("name", row.getString("username"));
+			aux.put("name", row.getString("name"));
 			users.add(aux);
 		}
 		result.put("users", users);
@@ -321,6 +368,13 @@ public class DashboardModel {
 		return result;
 	}
 	
+	/**
+	 * QUIT USER FROM GROUP
+	 * @param jdbcAccounting
+	 * @param groupId
+	 * @param userId
+	 * @return
+	 */
 	public static boolean quitUsers(JdbcTemplate jdbcAccounting, String groupId, String userId) {
 		try {
 			jdbcAccounting.update(
@@ -336,12 +390,19 @@ public class DashboardModel {
 		
 	}
 	
+	/**
+	 * DELETE GROUP
+	 * @param jdbcAccounting
+	 * @param groupId
+	 * @return
+	 */
 	public static boolean deleteGroup(JdbcTemplate jdbcAccounting, String groupId) {
 		try {
 			jdbcAccounting.update(
 					"DELETE FROM users_groups WHERE group_id = ?",
 					groupId
 					);
+			jdbcAccounting.update("DELETE FROM users_rights WHERE group_id = ?", groupId);
 			String groupName = (String) jdbcAccounting.query(String.format("SELECT name FROM `groups` WHERE id = %s", groupId), (rs) -> {
 				return Table.read().db(rs).get(0, 0);
 			});
@@ -359,5 +420,75 @@ public class DashboardModel {
 			return false;
 		}
 	}
+	
+	public static Map<String, Object> getSprints(JdbcTemplate jdbcAccounting) {
+		Map<String, Object> result = new HashMap<>();
+		
+		Table data = jdbcAccounting.query("SELECT name, data FROM sprints", (rs) -> {
+			return Table.read().db(rs);
+		});
+		
+		List<Map<String, Object>> sprintsList = new ArrayList<>();
+		for(Row row : data) {
+			Map<String, Object> aux = new HashMap<>();
+			aux.put("name", row.getString("name"));
+			aux.put("date", row.getDate("data"));
+			sprintsList.add(aux);
+		}
+		result.put("sprints", sprintsList);
+		result.put("ok", true);
+		return result;
+	}
+	
+	public static boolean updateSprints(JdbcTemplate jdbcAccounting, SprintsData[] sprintsData) {
+		try {
+			for(SprintsData data : sprintsData) {
+				LocalDate dia = LocalDate.parse(data.getDate().substring(0, 10), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+				jdbcAccounting.update(
+						"UPDATE sprints SET data = ? WHERE name = ?",
+						dia,
+						data.getName()
+						);
+			}
+			return true;
+		} catch (Exception e) {
+			System.out.println(e);
+			return false;
+		}
+	}
 
+	public static Map<String, Object> getRights(JdbcTemplate jdbcAccounting) {
+		Map<String, Object> result = new HashMap<>();
+
+		try {
+			Table data = jdbcAccounting.query("SELECT id, name, description FROM rights WHERE id <> 2", (rs) -> {
+				return Table.read().db(rs);
+			});
+			List<Map<String, Object>> rights = new ArrayList<>();
+
+			for(Row row : data) {
+				Map<String, Object> aux = new HashMap<>();
+				aux.put("id", Integer.toString(row.getInt("id")));
+				aux.put("name", row.getString("name"));
+				aux.put("description", row.getString("description"));
+				rights.add(aux);
+			}
+			result.put("rights", rights);
+			result.put("ok", true);
+		} catch(Exception e) {
+			System.out.println(e);
+			result.put("ok", false);
+		}
+
+		return result;
+	}
+
+	public static boolean saveRights(JdbcTemplate jdbcAccounting) {
+		try {
+			
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
 }

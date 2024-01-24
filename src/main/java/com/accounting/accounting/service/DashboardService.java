@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.accounting.accounting.model.AuthModel;
 import com.accounting.accounting.model.CreateGroupData;
 import com.accounting.accounting.model.DashboardModel;
+import com.accounting.accounting.model.SprintsData;
 import com.accounting.accounting.model.TransactionData;
 
 @Service
@@ -18,6 +19,10 @@ public class DashboardService {
 	@Autowired
 	@Qualifier("jdbcaccounting")
 	JdbcTemplate myAccounting;
+	
+	public Map<String, Object> getHome(Integer groupId) {
+		return DashboardModel.getHome(myAccounting, groupId);
+	}
 	
 	/**
 	 * RETURN TABLE & CHART DATA
@@ -46,22 +51,67 @@ public class DashboardService {
 		return DashboardModel.getGroups(myAccounting, token);
 	}
 	
-	public boolean createGroup(CreateGroupData groupData) {
+	/**
+	 * CREATE NEW GROUP
+	 * @param groupData
+	 * @return
+	 */
+	public Map<String, Object> createGroup(CreateGroupData groupData) {
 		return DashboardModel.createGroup(myAccounting, groupData);
 	}
 	
+	/**
+	 * ADD MEMBERS TO GROUP
+	 * @param token
+	 * @param groupId
+	 * @param users
+	 * @return
+	 */
 	public boolean changeMembers(String token, Integer groupId, String users) {
 		return DashboardModel.changeMembers(myAccounting, token, groupId, users);
 	}
 	
+	/**
+	 * GET GROUP USERS
+	 * @param groupId
+	 * @return
+	 */
 	public Map<String, Object> getUsers(Integer groupId) {
 		return DashboardModel.getUsers(myAccounting, groupId);
 	}
 	
+	/**
+	 * QUIT USER FROM GROUP
+	 * @param groupId
+	 * @param userId
+	 * @return
+	 */
 	public boolean quitUsers(String groupId, String userId) {
 		return DashboardModel.quitUsers(myAccounting, groupId, userId);
 	}
+	
+	/**
+	 * DELETE GROUP
+	 * @param groupId
+	 * @return
+	 */
 	public boolean deleteGroup(String groupId) {
 		return DashboardModel.deleteGroup(myAccounting, groupId);
+	}
+	
+	public Map<String, Object> getSprints() {
+		return DashboardModel.getSprints(myAccounting);
+	}
+	
+	public boolean updateSprints(SprintsData[] sprintsData) {
+		return DashboardModel.updateSprints(myAccounting, sprintsData);
+	}
+
+	public Map<String, Object> getRights() {
+		return DashboardModel.getRights(myAccounting);
+	}
+
+	public boolean saveRights() {
+		return DashboardModel.saveRights(myAccounting);
 	}
 }

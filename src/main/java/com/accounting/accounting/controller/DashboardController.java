@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.accounting.accounting.model.CreateGroupData;
+import com.accounting.accounting.model.SprintsData;
 import com.accounting.accounting.model.TransactionData;
 import com.accounting.accounting.service.DashboardService;
 
@@ -23,6 +24,11 @@ import com.accounting.accounting.service.DashboardService;
 public class DashboardController {
 	@Autowired
 	DashboardService dashboardService;
+	
+	@GetMapping("/getHome")
+	public Map<String, Object> getHome(@RequestParam("groupId") Integer groupId) {
+		return dashboardService.getHome(groupId);
+	}
 	
 	/**
 	 * RETURN TABLE & CHART DATA
@@ -54,12 +60,23 @@ public class DashboardController {
 		return dashboardService.getGroups(token);
 	}
 	
-	
+	/**
+	 * CREATE NEW GROUP
+	 * @param groupData
+	 * @return
+	 */
 	@PostMapping("/createGroup")
-	public boolean createGroup(@RequestBody CreateGroupData groupData){
+	public Map<String, Object> createGroup(@RequestBody CreateGroupData groupData){
 		return dashboardService.createGroup(groupData);
 	}
 	
+	/**
+	 * ADD MEMBERS TO GROUP
+	 * @param token
+	 * @param groupId
+	 * @param users
+	 * @return
+	 */
 	@GetMapping("/changeMembers")
 	public boolean changeMembers(
 			@RequestParam("token") String token,
@@ -68,6 +85,12 @@ public class DashboardController {
 			) {
 		return dashboardService.changeMembers(token, groupId, users);
 	}
+	
+	/**
+	 * GET GROUP USERS
+	 * @param groupId
+	 * @return
+	 */
 	@GetMapping("/getUsers")
 	public Map<String, Object> getUsers (
 			@RequestParam("groupId") Integer groupId
@@ -75,6 +98,12 @@ public class DashboardController {
 		return dashboardService.getUsers(groupId);
 	}
 	
+	/**
+	 * QUIT USER FROM GROUP
+	 * @param groupId
+	 * @param userId
+	 * @return
+	 */
 	@DeleteMapping("/quitUser")
 	public boolean quitUser(
 			@RequestParam ("groupId") String groupId,
@@ -83,8 +112,33 @@ public class DashboardController {
 		return dashboardService.quitUsers(groupId, userId);
 	}
 	
+	/**
+	 * DELETE GROUP
+	 * @param groupId
+	 * @return
+	 */
 	@DeleteMapping("/deleteGroup")
 	public boolean deleteGroup(@RequestParam("groupId") String groupId) {
 		return dashboardService.deleteGroup(groupId);
+	}
+	
+	@GetMapping("/getSprints")
+	public Map<String, Object> getSprints() {
+		return dashboardService.getSprints();
+	}
+	
+	@PostMapping("/updateSprints")
+	public boolean updateSprints(@RequestBody SprintsData[] sprintsData) {
+		return dashboardService.updateSprints(sprintsData);
+	}
+
+	@GetMapping("/getRights")
+	public Map<String, Object> getRights() {
+		return dashboardService.getRights();
+	}
+
+	@PostMapping("/saveRights")
+	public boolean saveRights() {
+		return dashboardService.saveRights();
 	}
 }

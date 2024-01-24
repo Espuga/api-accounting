@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import com.accounting.accounting.model.AuthModel;
+import com.accounting.accounting.model.NewAccountData;
 import com.accounting.accounting.model.SigninData;
 
 @Service
@@ -19,6 +20,10 @@ public class AuthService {
 	
 	public Map<String, Object> login(String username, String password) {
 		return AuthModel.login(myAccounting, username, password);
+	}
+	
+	public Map<String, Object> createACcount(NewAccountData newAccountData){
+		return AuthModel.createACcount(myAccounting, newAccountData);
 	}
 	
 	public String getUsername(String token) {
