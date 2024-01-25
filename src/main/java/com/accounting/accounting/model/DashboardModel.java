@@ -4,6 +4,7 @@ import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -354,6 +355,9 @@ public class DashboardModel {
 		Table data = jdbcAccounting.query(String.format(query, groupId), (rs) -> {
 			return Table.read().db(rs);
 		});
+		Table rights = jdbcAccounting.query(String.format("SELECT user_id, right_id FROM users_rights WHERE group_id = %d", groupId), (rs) -> {
+			return Table.read().db(rs);
+		});
 		
 		List<Map<String, Object>> users = new ArrayList<>();
 		for(Row row : data) {
@@ -361,6 +365,12 @@ public class DashboardModel {
 			aux.put("id", row.getInt("id"));
 			aux.put("username", row.getString("username"));
 			aux.put("name", row.getString("name"));
+			Table permisos = rights.where(rights.intColumn("user_id").isEqualTo(row.getInt("id")));
+			List<Integer> p = new ArrayList<>();
+			for(Row row2 : permisos) {
+				p.add(row2.getInt("right_id"));
+			}
+			aux.put("rights", p);
 			users.add(aux);
 		}
 		result.put("users", users);
@@ -421,6 +431,11 @@ public class DashboardModel {
 		}
 	}
 	
+	/**
+	 * GET SPRINTS + DATES
+	 * @param jdbcAccounting
+	 * @return
+	 */
 	public static Map<String, Object> getSprints(JdbcTemplate jdbcAccounting) {
 		Map<String, Object> result = new HashMap<>();
 		
@@ -440,6 +455,12 @@ public class DashboardModel {
 		return result;
 	}
 	
+	/**
+	 * UPDATE SPRINTS PERIODS
+	 * @param jdbcAccounting
+	 * @param sprintsData
+	 * @return
+	 */
 	public static boolean updateSprints(JdbcTemplate jdbcAccounting, SprintsData[] sprintsData) {
 		try {
 			for(SprintsData data : sprintsData) {
@@ -457,6 +478,11 @@ public class DashboardModel {
 		}
 	}
 
+	/**
+	 * GET ALL RIGHTS TO LIST
+	 * @param jdbcAccounting
+	 * @return
+	 */
 	public static Map<String, Object> getRights(JdbcTemplate jdbcAccounting) {
 		Map<String, Object> result = new HashMap<>();
 
@@ -483,11 +509,40 @@ public class DashboardModel {
 		return result;
 	}
 
-	public static boolean saveRights(JdbcTemplate jdbcAccounting) {
+	/**
+	 * SAVE USER RIGHTS
+	 * @param jdbcAccounting
+	 * @param rightsData
+	 * @return
+	 */
+	public static boolean saveRights(JdbcTemplate jdbcAccounting, RightsData rightsData) {
 		try {
-			
+			Table rights = jdbcAccounting.query(String.format("SELECT right_id FROM users_rights WHERE user_id = %d AND group_id = %d", rightsData.getUserId(), rightsData.getGroupId()), (rs) -> {
+				return Table.read().db(rs);
+			});
+			for(Integer rightId : rightsData.getRightsId()) {
+				if(rights.where(rights.intColumn("right_id").isEqualTo(rightId)).isEmpty()) {
+					jdbcAccounting.update(
+						"INSERT INTO users_rights (user_id, group_id, right_id) VALUES (?, ?, ?)", 
+						rightsData.getUserId(),
+						rightsData.getGroupId(),
+						rightId);
+				}
+			}
+			List<Integer> rightsList = new ArrayList<>(Arrays.asList(rightsData.getRightsId()));
+			for(Row row : rights) {
+				if (!rightsList.contains(row.getInt("right_id"))) {
+					jdbcAccounting.update(
+						"DELETE FROM users_rights WHERE user_id = ? AND group_id = ? AND right_id = ?",
+						rightsData.getUserId(),
+						rightsData.getGroupId(),
+						row.getInt("right_id")
+						);
+				}
+			}
 			return true;
 		} catch (Exception e) {
+			System.out.println(e);
 			return false;
 		}
 	}

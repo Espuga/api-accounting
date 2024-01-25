@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.accounting.accounting.model.AuthModel;
 import com.accounting.accounting.model.CreateGroupData;
 import com.accounting.accounting.model.DashboardModel;
+import com.accounting.accounting.model.RightsData;
 import com.accounting.accounting.model.SprintsData;
 import com.accounting.accounting.model.TransactionData;
 
@@ -99,19 +100,37 @@ public class DashboardService {
 		return DashboardModel.deleteGroup(myAccounting, groupId);
 	}
 	
+	/**
+	 * GET SPRINTS + DATES
+	 * @return
+	 */
 	public Map<String, Object> getSprints() {
 		return DashboardModel.getSprints(myAccounting);
 	}
 	
+	/**
+	 * UPDATE SPRINTS PERIODS
+	 * @param sprintsData
+	 * @return
+	 */
 	public boolean updateSprints(SprintsData[] sprintsData) {
 		return DashboardModel.updateSprints(myAccounting, sprintsData);
 	}
 
+	/**
+	 * GET ALL RIGHTS TO LIST
+	 * @return
+	 */
 	public Map<String, Object> getRights() {
 		return DashboardModel.getRights(myAccounting);
 	}
 
-	public boolean saveRights() {
-		return DashboardModel.saveRights(myAccounting);
+	/**
+	 * SAVE USER RIGHTS
+	 * @param rightsData
+	 * @return
+	 */
+	public boolean saveRights(RightsData rightsData) {
+		return DashboardModel.saveRights(myAccounting, rightsData);
 	}
 }
