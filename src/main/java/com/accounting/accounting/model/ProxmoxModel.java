@@ -69,7 +69,7 @@ public class ProxmoxModel {
 		
 		try {
 			if(!start.equals("") && !end.equals("")) {
-				Table cpus = jdbc.query(String.format("SELECT data, vmid, hostname, cpus FROM cpus WHERE data >= '%s' AND data  <= '%s'", start, end), rs -> {
+					Table cpus = jdbc.query(String.format("SELECT data, vmid, hostname, cpus FROM cpus WHERE data >= '%s' AND data  <= '%s'", start, end), rs -> {
 			        return Table.read().db(rs);
 			    });
 			    Table cpu = jdbc.query(String.format("SELECT data, vmid, hostname, cpu FROM cpu WHERE data >= '%s' AND data  <= '%s'", start, end), rs -> {

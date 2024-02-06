@@ -15,7 +15,7 @@ import com.accounting.accounting.model.SprintsData;
 
 @Service
 public class SettingsService {
-   @Autowired
+   	@Autowired
 	@Qualifier("jdbcaccounting")
 	JdbcTemplate myAccounting;
     

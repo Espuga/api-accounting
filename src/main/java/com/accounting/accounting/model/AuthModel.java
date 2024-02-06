@@ -1,5 +1,7 @@
 package com.accounting.accounting.model;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,17 +15,50 @@ import tech.tablesaw.api.Table;
 
 public class AuthModel {
 
+	public static String encodePassword(String password) {
+        try {
+            // Crear una instancia de MessageDigest con el algoritmo SHA-256
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+
+            // Obtener el hash de la contraseña
+            byte[] encodedHash = digest.digest(password.getBytes());
+
+            // Convertir el hash en una cadena hexadecimal
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : encodedHash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            // Manejar la excepción de algoritmo no encontrado
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 	public static Map<String, Object> login(JdbcTemplate jdbcAccounting, String username, String password) {
 		Map<String, Object> result = new HashMap<>();
 		try {
-			Table data = jdbcAccounting.query(String.format("SELECT token, name FROM users WHERE username = '%s' AND password = '%s' ", username, password), (rs) -> {
+			Table data = jdbcAccounting.query(String.format("SELECT token, name, password FROM users WHERE username = '%s' ", username), (rs) -> {
 				return Table.read().db(rs);
 			});
-			if(data.isEmpty()) {
+
+			if(data.get(0, 2).toString().equals(encodePassword(password))) {
+				result.put("token", data.get(0, 0).toString());
+			}else {
+				result.put("token", "");
+			}
+
+			/* if(data.isEmpty()) {
 				result.put("token", "");
 			}else {
 				result.put("token", data.get(0, 0).toString());
-			}
+			} */
 			result.put("name", data.get(0, 1).toString());
 			// Rights
 			Table rights = jdbcAccounting.query(
@@ -84,7 +119,7 @@ public class AuthModel {
         				"INSERT INTO users (username, name, password, token) VALUES (?, ?, ?, ?)",
         				newAccountData.getUsername(),
         				newAccountData.getName(),
-        				newAccountData.getPassword(),
+        				encodePassword(newAccountData.getPassword()),
         				token
         				);
         		

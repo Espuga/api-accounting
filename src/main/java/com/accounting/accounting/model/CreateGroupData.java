@@ -5,12 +5,14 @@ public class CreateGroupData {
 	private String name;
 	private String users;
 	private long amount;
+	private String vlan;
 	
-	public CreateGroupData(String token, String name, String users, long amount) {
+	public CreateGroupData(String token, String name, String users, long amount, String vlan) {
 		this.token = token;
 		this.name = name;
 		this.users = users;
 		this.amount = amount;
+		this.vlan = vlan;
 	}
 	
 	// Getters
@@ -25,5 +27,8 @@ public class CreateGroupData {
 	}
 	public long getAmount() {
 		return this.amount;
+	}
+	public String getVlan() {
+		return this.vlan;
 	}
 }
