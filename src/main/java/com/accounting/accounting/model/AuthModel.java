@@ -16,30 +16,29 @@ import tech.tablesaw.api.Table;
 public class AuthModel {
 
 	public static String encodePassword(String password) {
-        try {
-            // Crear una instancia de MessageDigest con el algoritmo SHA-256
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+    try {
+      // Crear una instancia de MessageDigest con el algoritmo SHA-256
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
 
-            // Obtener el hash de la contraseña
-            byte[] encodedHash = digest.digest(password.getBytes());
+      // Obtener el hash de la contraseña
+      byte[] encodedHash = digest.digest(password.getBytes());
 
-            // Convertir el hash en una cadena hexadecimal
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : encodedHash) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) {
-                    hexString.append('0');
-                }
-                hexString.append(hex);
-            }
-
-            return hexString.toString();
-        } catch (NoSuchAlgorithmException e) {
-            // Manejar la excepción de algoritmo no encontrado
-            e.printStackTrace();
-            return null;
+      // Convertir el hash en una cadena hexadecimal
+      StringBuilder hexString = new StringBuilder();
+      for (byte b : encodedHash) {
+        String hex = Integer.toHexString(0xff & b);
+        if (hex.length() == 1) {
+          hexString.append('0');
         }
+        hexString.append(hex);
+      }
+
+      return hexString.toString();
+    } catch (NoSuchAlgorithmException e) {
+      e.printStackTrace();
+      return null;
     }
+  }
 
 	public static Map<String, Object> login(JdbcTemplate jdbcAccounting, String username, String password) {
 		Map<String, Object> result = new HashMap<>();
@@ -78,6 +77,7 @@ public class AuthModel {
 		} catch (Exception e) {
 			System.out.println(e);
 			result.put("ok", false);
+      result.put("msg", e);
 		}
 		return result;
 	}

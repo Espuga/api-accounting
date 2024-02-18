@@ -17,6 +17,7 @@ import com.accounting.accounting.model.CreateGroupData;
 import com.accounting.accounting.model.RightsData;
 import com.accounting.accounting.model.SprintsData;
 import com.accounting.accounting.model.TransactionData;
+import com.accounting.accounting.model.UpdateTransactionData;
 import com.accounting.accounting.service.DashboardService;
 
 @RestController
@@ -60,4 +61,19 @@ public class DashboardController {
 	public Map<String, Object> getGroups(@RequestParam("token") String token) {
 		return dashboardService.getGroups(token);
 	}
+
+  @GetMapping("/getSprints")
+  public Map<String, Object> getSprints() {
+    return dashboardService.getSprints();
+  }
+
+  @PostMapping("/updateTransaction")
+  public boolean updateTransaction(@RequestBody UpdateTransactionData updateTransactionData) {
+    return dashboardService.updateTransaction(updateTransactionData);
+  }
+
+  @DeleteMapping("/deleteTransaction/{groupId}/{id}")
+  public boolean deleteTransaction(@PathVariable("groupId") String groupId, @PathVariable("id") String id) {
+    return dashboardService.deleteTransaction(groupId, id);
+  }
 }

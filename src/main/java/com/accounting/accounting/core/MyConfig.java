@@ -16,13 +16,13 @@ public class MyConfig {
 		try {
 			DriverManagerDataSource dataSource = new DriverManagerDataSource();
 			dataSource.setDriverClassName("com.mysql.jdbc.Driver");
-			dataSource.setUrl("jdbc:mysql://192.168.0.121:3306/accounting"); 
+			// dataSource.setUrl("jdbc:mysql://192.168.0.121:3306/accounting"); 
 			//dataSource.setUrl("jdbc:mysql://192.168.1.48:3306/accounting"); 
 			// dataSource.setUrl("jdbc:mysql://10.23.0.80:3306/accounting2"); 
-			//dataSource.setUrl("jdbc:mysql://127.0.0.1:3306/accounting2"); 
+			dataSource.setUrl("jdbc:mysql://127.0.0.1:3306/accounting2"); 
 			dataSource.setUsername("marc");
-			dataSource.setPassword("perprotegir");
-			//dataSource.setPassword("marc1234");
+			// dataSource.setPassword("perprotegir");
+			dataSource.setPassword("marc1234");
 			return dataSource;
 		} catch (Exception e) {
 			return null;
@@ -39,13 +39,13 @@ public class MyConfig {
 		try {
 			DriverManagerDataSource dataSource = new DriverManagerDataSource();
 			dataSource.setDriverClassName("com.mysql.jdbc.Driver");
-			dataSource.setUrl("jdbc:mysql://192.168.0.121:3306/proxmox"); 
+			// dataSource.setUrl("jdbc:mysql://192.168.0.121:3306/proxmox"); 
 			// dataSource.setUrl("jdbc:mysql://192.168.1.48:3306/proxmox"); 
 			// dataSource.setUrl("jdbc:mysql://10.23.0.80:3306/proxmox"); 
-			//dataSource.setUrl("jdbc:mysql://127.0.0.1:3306/proxmox"); 
+			dataSource.setUrl("jdbc:mysql://127.0.0.1:3306/proxmox"); 
 			dataSource.setUsername("marc");
-			dataSource.setPassword("perprotegir");
-			//dataSource.setPassword("marc1234");
+			// dataSource.setPassword("perprotegir");
+			dataSource.setPassword("marc1234");
 			return dataSource;
 		} catch (Exception e) {
 			return null;

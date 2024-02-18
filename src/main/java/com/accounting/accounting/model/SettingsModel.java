@@ -31,9 +31,8 @@ public class SettingsModel {
 		
 		// Add group in groups table
 		jdbcAccounting.update(
-				"INSERT INTO `groups` (name, admin_id, vlan) VALUES ( ?, (SELECT u.id FROM users u WHERE u.token = ?), ?)", 
+				"INSERT INTO `groups` (name, vlan) VALUES ( ?, ?)", 
 				groupData.getName(),
-				groupData.getToken(),
 				groupData.getVlan()
 				);
 		

@@ -11,6 +11,8 @@ import java.util.Map;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import com.ibm.icu.util.LocaleMatcher.Result;
+
 import tech.tablesaw.api.Row;
 import tech.tablesaw.api.Table;
 
@@ -20,14 +22,16 @@ public class DashboardModel {
 		Map<String, Object> result = new HashMap<>();
 		
 		try {
-			String groupName = (String) jdbcAccounting.query(String.format("SELECT name FROM `groups` WHERE id = %d", groupId), (rs) -> {
-				return Table.read().db(rs).get(0, 0);
-			});
-			Table data = jdbcAccounting.query(String.format("SELECT SUM(amount) FROM %s", groupName), (rs) -> {
-				return Table.read().db(rs);
-			});
-			result.put("amount",data.get(0, 0));
-			result.put("ok", true);
+      if(!groupId.equals(0)){
+        String groupName = (String) jdbcAccounting.query(String.format("SELECT name FROM `groups` WHERE id = %d", groupId), (rs) -> {
+          return Table.read().db(rs).get(0, 0);
+        });
+        Table data = jdbcAccounting.query(String.format("SELECT SUM(amount) FROM %s", groupName), (rs) -> {
+          return Table.read().db(rs);
+        });
+        result.put("amount",data.get(0, 0));
+        result.put("ok", true);
+      }
 		} catch (Exception e) {
 			System.out.println(e);
 			result.put("ok", false);
@@ -50,7 +54,7 @@ public class DashboardModel {
 		});
 		// Get data
 		Table data = jdbcAccounting.query(String.format(
-				"SELECT t.id, t.title, t.description, t.amount, t.data, u.name FROM %s t JOIN users u ON (u.id = t.userId) ORDER BY data ", groupName ), (rs) -> {
+				"SELECT t.id, t.title, t.description, t.amount, t.data, u.id as userId, u.name FROM %s t JOIN users u ON (u.id = t.userId) ORDER BY data ", groupName ), (rs) -> {
 			return Table.read().db(rs);
 		});
 		
@@ -64,6 +68,7 @@ public class DashboardModel {
 				aux.put("amount", row.getDouble("amount"));
 				aux.put("data", row.getDate("data").toString());
 				aux.put("name", row.getString("name"));
+				aux.put("id", row.getInt("id"));
 				dataReturn.add(aux);
 			}
 		}
@@ -158,10 +163,16 @@ public class DashboardModel {
 	 */
 	public static Map<String, Object> getInit(JdbcTemplate jdbcAccounting, Integer groupId) {
 		Map<String, Object> result = new HashMap<>();
-		result.put("ok", true);
-		
-		result.put("dataTable", getDataTable(jdbcAccounting, groupId));	// Get table data
-		result.put("dataChart", getDataChart(jdbcAccounting, groupId));	// Get chart data
+		if(!groupId.equals(0)){
+      try {
+        result.put("dataTable", getDataTable(jdbcAccounting, groupId));	// Get table data
+        result.put("dataChart", getDataChart(jdbcAccounting, groupId));	// Get chart data
+        result.put("ok", true);
+      } catch (Exception e) {
+        System.out.println(e);
+        result.put("ok", false);
+      }
+    }
 		
 		return result;
 	}
@@ -195,6 +206,7 @@ public class DashboardModel {
 		}catch (Exception e) {
 			System.out.println(e);
 			result.put("ok", false);
+      result.put("msg", e);
 		}
 		return result;
 	}
@@ -208,14 +220,29 @@ public class DashboardModel {
 	public static Map<String, Object> getGroups(JdbcTemplate jdbcAccounting, String token) {
 		Map<String, Object> result = new HashMap<>();
 		try {
-			// Get groups list
-			String query = "SELECT g.id, g.name, g.admin_id FROM users u "
+
+      Table right = jdbcAccounting.query(
+        String.format("SELECT group_id, right_id FROM users_rights WHERE user_id = (SELECT id FROM users WHERE token = '%s') AND group_id = 0 AND right_id = 2", token), (rs) -> {
+        return Table.read().db(rs);
+      });
+
+      String query = "";
+
+      if(right.isEmpty()){
+        query = "SELECT g.id, g.name FROM users u "
 					+ "JOIN users_groups ug ON (ug.user_id = u.id) "
 					+ "JOIN `groups` g ON (ug.group_id = g.id) "
 					+ "WHERE u.token='%s' ";
+      } else {
+        query = "SELECT g.id, g.name FROM `groups` g "
+          + "WHERE g.id <> 0";
+      }
+			// Get groups list
+			
 			Table data = jdbcAccounting.query(String.format(query, token), (rs) -> {
 				return Table.read().db(rs);
 			});
+
 			
 			// Change groups format
 			List<Map<String, Object>> groups = new ArrayList<>();
@@ -223,16 +250,96 @@ public class DashboardModel {
 				Map<String, Object> aux = new HashMap<>();
 				aux.put("name", row.getString("name"));
 				aux.put("id", row.getInt("id"));
-				aux.put("admin_id", row.getInt("admin_id"));
+				// aux.put("admin_id", row.getInt("admin_id"));
 				groups.add(aux);
 			}
 			
 			result.put("ok", true);
 			result.put("groups", groups);
+
+
 		}catch (Exception e) {
 			System.out.println(e);
 			result.put("ok", false);
 		}
 		return result;
 	}
+
+
+  private static String findLastDay(Table sprintsTable, String sprint) {
+    String[] nom = sprintsTable.where(sprintsTable.stringColumn("name").isEqualTo(sprint)).getString(0, "name").split(" ");
+    String num = nom[nom.length - 1];
+
+    try {
+        String seguent = sprintsTable.where(sprintsTable.stringColumn("name").isEqualTo("Sprint "+(Integer.parseInt(num)+1))).get(0, 1).toString();
+        LocalDate data = LocalDate.parse(seguent).minusDays(1);
+
+        return data.toString();
+    } catch (Exception e) {
+        return "";
+    }
+  }
+
+  public static Map<String, Object> getSprints(JdbcTemplate jdbcAccounting) {
+    Map<String, Object> result = new HashMap<>();
+
+    List<Map<String, Object>> sprints = new ArrayList<>();
+    
+    Table sprintsTable = jdbcAccounting.query("SELECT name, data FROM sprints" , (rs) -> {
+        return Table.read().db(rs);
+    });
+
+
+    for(Row row : sprintsTable) {
+        Map<String, Object> aux = new HashMap<>();
+        aux.put("name", row.getString("name"));
+        aux.put("start", row.getDate("data"));
+        aux.put("end", findLastDay(sprintsTable, row.getString("name")));
+        sprints.add(aux);
+    }
+
+    result.put("sprints", sprints);
+    result.put("ok", true);
+
+    return result;
+  }
+
+  public static boolean updateTransaction(JdbcTemplate jdbcAccounting, UpdateTransactionData updateTransactionData) {
+    try {
+      String groupName = (String) jdbcAccounting.query(String.format("SELECT name FROM `groups` WHERE id = %d", updateTransactionData.getGroupId()), (rs) -> {
+				return Table.read().db(rs).get(0, 0);
+			});
+
+
+      jdbcAccounting.update(
+        String.format("UPDATE %s SET title = ?, description = ?, amount = ?, data = ? WHERE id = ? ", groupName), 
+        updateTransactionData.getTitle(),
+        updateTransactionData.getDescription(),
+        updateTransactionData.getAmount(),
+        updateTransactionData.getData(),
+        updateTransactionData.getId()
+      ); 
+      return true;
+    } catch (Exception e) {
+      System.out.println(e);
+      return false;
+    }
+  }
+
+
+  public static boolean deleteTransaction(JdbcTemplate jdbcAccounting, String groupId, String id) {
+    try  {
+      String query = String.format("SELECT name FROM `groups` WHERE id = %d", Integer.parseInt(groupId));
+      String groupName = (String) jdbcAccounting.query(query, (rs) -> {
+				return Table.read().db(rs).get(0, 0);
+			});
+
+      jdbcAccounting.update(String.format("DELETE FROM %s WHERE id = ?", groupName), id);
+
+      return true;
+    } catch(Exception e) {
+      System.out.println(e);
+      return false;
+    }
+  }
 }

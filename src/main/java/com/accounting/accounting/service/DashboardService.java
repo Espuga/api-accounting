@@ -6,14 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
 
-import com.accounting.accounting.model.AuthModel;
-import com.accounting.accounting.model.CreateGroupData;
 import com.accounting.accounting.model.DashboardModel;
-import com.accounting.accounting.model.RightsData;
-import com.accounting.accounting.model.SprintsData;
 import com.accounting.accounting.model.TransactionData;
+import com.accounting.accounting.model.UpdateTransactionData;
 
 @Service
 public class DashboardService {
@@ -51,4 +47,16 @@ public class DashboardService {
 	public Map<String, Object> getGroups(String token) {
 		return DashboardModel.getGroups(myAccounting, token);
 	}
+
+  public Map<String, Object> getSprints() {
+    return DashboardModel.getSprints(myAccounting);
+  }
+
+  public boolean updateTransaction(UpdateTransactionData updateTransactionData) {
+    return DashboardModel.updateTransaction(myAccounting, updateTransactionData);
+  }
+
+  public boolean deleteTransaction(String groupId, String id) {
+    return DashboardModel.deleteTransaction(myAccounting, groupId, id);
+  }
 }
