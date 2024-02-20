@@ -54,7 +54,11 @@ public class DashboardModel {
 		});
 		// Get data
 		Table data = jdbcAccounting.query(String.format(
-				"SELECT t.id, t.title, t.description, t.amount, t.data, u.id as userId, u.name FROM %s t JOIN users u ON (u.id = t.userId) ORDER BY data ", groupName ), (rs) -> {
+				"SELECT t.id, t.title, t.description, t.amount, t.data, u.id as userId, u.name "
+				+ "FROM %s t "
+				+ "JOIN users u ON (u.id = t.userId) "
+				+ "WHERE t.authorized = 1 AND t.accepted = 1 "
+				+ "ORDER BY data ", groupName ), (rs) -> {
 			return Table.read().db(rs);
 		});
 		
@@ -93,7 +97,10 @@ public class DashboardModel {
 		});
 		
 		// Get data
-		String query = "SELECT id, title, description, amount, data FROM %s ORDER BY data";
+		String query = "SELECT id, title, description, amount, data "
+				+ "FROM %s "
+				+ "WHERE authorized = 1 AND accepted = 1 "
+				+ "ORDER BY data";
 		Table data = jdbcAccounting.query(String.format(query, groupName), (rs) -> {
 			return Table.read().db(rs);
 		});
