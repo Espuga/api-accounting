@@ -101,4 +101,21 @@ public class SettingsService {
 	public boolean saveRights(RightsData rightsData) {
 		return SettingsModel.saveRights(myAccounting, rightsData);
 	}
+	
+	/**
+	 * GET TELEGRAM CHAT ID
+	 * @return
+	 */
+	public Map<String, Object> getChartId() {
+		return SettingsModel.getChartId(myAccounting);
+	}
+	
+	/**
+	 * SAVE TELEGRAM CHAT ID
+	 * @param chatId
+	 * @return
+	 */
+	public boolean saveChatId(String chatId) {
+		return SettingsModel.saveChatId(myAccounting, chatId);
+	}
 }  

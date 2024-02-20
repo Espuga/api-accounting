@@ -124,4 +124,23 @@ public class SettingsController {
 	public boolean saveRights(@RequestBody RightsData rightsData) {
 		return settingsService.saveRights(rightsData);
 	}
+	
+	/**
+	 * GET TELEGRAM CHAT ID
+	 * @return
+	 */
+	@GetMapping("/getChatId")
+	public Map<String, Object> getChartId() {
+		return settingsService.getChartId();
+	}
+	
+	/**
+	 * SAVE TELEGRAM CHAT ID
+	 * @param chatId
+	 * @return
+	 */
+	@PostMapping("/saveChatId")
+	public boolean saveChatId(@RequestBody String chatId) {
+		return settingsService.saveChatId(chatId);
+	}
 }

@@ -19,7 +19,7 @@ import tech.tablesaw.api.Table;
 public class TelegramMessageSender {
   private static final String TELEGRAM_API_URL = "https://api.telegram.org/bot";
   // private static final String BOT_TOKEN = "6878232403:AAE-sJrQfVQ-rxmTH1_58uHWfqqWPvk1ATw";
-  private static final String BOT_TOKEN = "";
+  private static final String BOT_TOKEN = "6247889364:AAHF91skOJjndQ8iJttZNVLH59YH_d8p0Mg";
 
   // public boolean sendMessage(String chatId, String message) {
   public boolean sendMessage(JdbcTemplate jdbcaccounting, String message, String token) {

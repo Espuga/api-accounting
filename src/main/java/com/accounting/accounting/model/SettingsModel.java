@@ -325,4 +325,41 @@ public class SettingsModel {
 			return false;
 		}
 	}
+	
+	/**
+	 * GET TELEGRAM CHAT ID
+	 * @param jdbcAccounting
+	 * @return
+	 */
+	public static Map<String, Object> getChartId(JdbcTemplate jdbcAccounting) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			String chatId = jdbcAccounting.query("SELECT value FROM settings WHERE `key` = 'chatId'", (rs) -> {
+				return Table.read().db(rs).getString(0, 0);
+			});
+			result.put("chatId", chatId);
+			result.put("ok", true);
+		} catch (Exception e) {
+			System.out.println(e);
+			result.put("ok", false);
+		}
+		return result;
+	}
+	
+	/**
+	 * SAVE TELEGRAM CHAT ID
+	 * @param jdbcAccounting
+	 * @param chatId
+	 * @return
+	 */
+	public static boolean saveChatId(JdbcTemplate jdbcAccounting, String chatId) {
+		try {
+			jdbcAccounting.update("UPDATE settings SET value = ? WHERE `key` = 'chatId'", chatId);
+			return true;
+		} catch (Exception e) {
+			System.out.println(e);
+			return false;
+		}
+	}
 }
