@@ -17,10 +17,6 @@ public class DashboardService {
 	@Qualifier("jdbcaccounting")
 	JdbcTemplate myAccounting;
 	
-	public Map<String, Object> getHome(Integer groupId) {
-		return DashboardModel.getHome(myAccounting, groupId);
-	}
-	
 	/**
 	 * RETURN TABLE & CHART DATA
 	 * @param groupId
@@ -48,14 +44,29 @@ public class DashboardService {
 		return DashboardModel.getGroups(myAccounting, token);
 	}
 
+  /**
+   * GET SPRINTS + SPRINTS PERIODS
+   * @return
+   */
   public Map<String, Object> getSprints() {
     return DashboardModel.getSprints(myAccounting);
   }
 
+  /**
+   * UPDATE TRANSACTION INFO
+   * @param updateTransactionData
+   * @return
+   */
   public boolean updateTransaction(UpdateTransactionData updateTransactionData) {
     return DashboardModel.updateTransaction(myAccounting, updateTransactionData);
   }
 
+  /**
+   * DELETE TRANSACTION
+   * @param groupId
+   * @param id
+   * @return
+   */
   public boolean deleteTransaction(String groupId, String id) {
     return DashboardModel.deleteTransaction(myAccounting, groupId, id);
   }

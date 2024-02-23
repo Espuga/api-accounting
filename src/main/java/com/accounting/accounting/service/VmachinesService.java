@@ -14,35 +14,61 @@ import com.accounting.accounting.model.VmachinesModel;
 
 @Service
 public class VmachinesService {
-    @Autowired
+  @Autowired
 	@Qualifier("jdbcproxmox")
 	JdbcTemplate myProxmox;
 
-    @Autowired
+  @Autowired
 	@Qualifier("jdbcaccounting")
 	JdbcTemplate myAccounting;
 
-    public Map<String, Object> getSelectors() {
-        return VmachinesModel.getSelectors(myAccounting);
-    }
+  /**
+   * GET VMACHINES SELECTORS
+   * @return
+   */
+  public Map<String, Object> getSelectors() {
+    return VmachinesModel.getSelectors(myAccounting);
+  }
 
-    public Map<String, Object> getDataTable(String groupId, String start, String end) {
-        return VmachinesModel.getDataTable(myAccounting, myProxmox, groupId, start, end);
-    }
+  /**
+   * GET GROUP's PROXMOX DATA
+   * @param groupId
+   * @param start
+   * @param end
+   * @return
+   */
+  public Map<String, Object> getDataTable(String groupId, String start, String end) {
+    return VmachinesModel.getDataTable(myAccounting, myProxmox, groupId, start, end);
+  }
 
-    public Map<String, Object> getGroupsDataTable(String groupsId, String start, String end) {
-        return VmachinesModel.getGroupsDataTable(myAccounting, myProxmox, groupsId, start, end);
-    }
+  /**
+   * TEACHER GET GROUPS DATA
+   * @param groupsId
+   * @param start
+   * @param end
+   * @return
+   */
+  public Map<String, Object> getGroupsDataTable(String groupsId, String start, String end) {
+    return VmachinesModel.getGroupsDataTable(myAccounting, myProxmox, groupsId, start, end);
+  }
 
-    public boolean savePrices(PricesModel pricesModel) {
-        return VmachinesModel.savePrices(myAccounting, pricesModel);
-    }
+  /**
+   * UPDATE PRICES
+   * @param pricesModel
+   * @return
+   */
+  public boolean savePrices(PricesModel pricesModel) {
+    return VmachinesModel.savePrices(myAccounting, pricesModel);
+  }
 
-    public boolean doInvoice(InvoiceModel invoiceModel) {
-        return VmachinesModel.doInvoice(myAccounting, invoiceModel);
-    }
-    
-    public Map<String, Object> getNMachines(String groupId) {
-    	return VmachinesModel.getNMachines(myAccounting, myProxmox, groupId);
-    }
+  /**
+   * DO INVOICE FOR EVERY GROUP
+   * @param invoiceModel
+   * @return
+   */
+  public boolean doInvoice(InvoiceModel invoiceModel) {
+    return VmachinesModel.doInvoice(myAccounting, invoiceModel);
+  }
+  
+  
 }

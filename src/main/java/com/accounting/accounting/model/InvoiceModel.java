@@ -5,12 +5,14 @@ public class InvoiceModel {
   private Double[] prCpu;
   private Double[] prDisk;
   private String token;
+  private String data;
 
-  public InvoiceModel(String[] vlans, Double[] prCpu, Double[] prDisk, String token) {
+  public InvoiceModel(String[] vlans, Double[] prCpu, Double[] prDisk, String token, String data) {
     this.vlans = vlans;
     this.prCpu = prCpu;
     this.prDisk = prDisk;
     this.token = token;
+    this.data = data;
   }
 
   public String[] getVlans() {
@@ -24,5 +26,8 @@ public class InvoiceModel {
   }
   public String getToken() {
     return this.token;
+  }
+  public String getData() {
+    return this.data;
   }
 }

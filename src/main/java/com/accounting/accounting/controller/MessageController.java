@@ -21,12 +21,21 @@ public class MessageController {
   @Autowired
   MessageService messageService;
 
+  /**
+   * SEND TELEGRAM MESSAGE
+   * @param request
+   * @return
+   */
   @PostMapping("/send-message")
   public boolean sendMessage(@RequestBody SendMessageRequest request) {
     // return telegramMessageSender.sendMessage("719358840", request.getMessage()  );
     return messageService.sendMessage(request.getMessage(), request.getToken());
   }
 
+  /**
+   * GET THE TELEGRAM HISTORY OF MESSAGES
+   * @return
+   */
   @GetMapping("/getMessages")
   public Map<String, Object> getMessages() {
     return messageService.getMessages();

@@ -18,14 +18,30 @@ public class AuthService {
 	@Qualifier("jdbcaccounting")
 	JdbcTemplate myAccounting;
 	
+  /**
+   * LOGIN
+   * @param username
+   * @param password
+   * @return
+   */
 	public Map<String, Object> login(String username, String password) {
 		return AuthModel.login(myAccounting, username, password);
 	}
 	
+  /**
+   * CREATE NEW USER's ACCOUNT
+   * @param newAccountData
+   * @return
+   */
 	public Map<String, Object> createACcount(NewAccountData newAccountData){
 		return AuthModel.createACcount(myAccounting, newAccountData);
 	}
 	
+  /**
+   * GET THE USER NAME
+   * @param token
+   * @return
+   */
 	public String getUsername(String token) {
 		return AuthModel.getUsername(myAccounting, token);
 	}

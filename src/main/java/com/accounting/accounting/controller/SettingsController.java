@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.accounting.accounting.model.CreateGroupData;
 import com.accounting.accounting.model.RightsData;
+import com.accounting.accounting.model.SaveVlanData;
 import com.accounting.accounting.model.SprintsData;
 import com.accounting.accounting.service.DashboardService;
 import com.accounting.accounting.service.SettingsService;
@@ -142,5 +143,25 @@ public class SettingsController {
 	@PostMapping("/saveChatId")
 	public boolean saveChatId(@RequestBody String chatId) {
 		return settingsService.saveChatId(chatId);
+	}
+
+  /**
+   * GET THE VLAN OF THE GROUP
+   * @param id
+   * @return
+   */
+  @GetMapping("/getVlan")
+  public Map<String, Object> getVlan(@RequestParam Integer id) {
+    return settingsService.getVlan(id);
+  }
+
+  /**
+   * UPDATE GROUP VLAN
+   * @param saveVlanData
+   * @return
+   */
+  @PostMapping("/saveVlan")
+	public boolean saveVlan(@RequestBody SaveVlanData saveVlanData) {
+		return settingsService.saveVlan(saveVlanData);
 	}
 }

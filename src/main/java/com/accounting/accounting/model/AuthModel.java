@@ -14,7 +14,11 @@ import tech.tablesaw.api.Row;
 import tech.tablesaw.api.Table;
 
 public class AuthModel {
-
+  /**
+   * ECRYPT THE PASSWORD IN SHA-256
+   * @param password
+   * @return
+   */
 	public static String encodePassword(String password) {
     try {
       // Crear una instancia de MessageDigest con el algoritmo SHA-256
@@ -40,6 +44,13 @@ public class AuthModel {
     }
   }
 
+  /**
+   * LOGIN
+   * @param jdbcAccounting
+   * @param username
+   * @param password
+   * @return
+   */
 	public static Map<String, Object> login(JdbcTemplate jdbcAccounting, String username, String password) {
 		Map<String, Object> result = new HashMap<>();
 		try {
@@ -82,7 +93,12 @@ public class AuthModel {
 		return result;
 	}
 	
-	
+	/**
+   * CREATE NEW USER's ACCOUNT
+   * @param jdbcAccounting
+   * @param newAccountData
+   * @return
+   */
 	public static Map<String, Object> createACcount(JdbcTemplate jdbcAccounting, NewAccountData newAccountData) {
 		Map<String, Object> result = new HashMap<>();
 		
@@ -136,6 +152,12 @@ public class AuthModel {
 		return result;
 	}
 	
+  /**
+   * GET THE USER NAME
+   * @param jdbcAccounting
+   * @param token
+   * @return
+   */
 	public static String getUsername(JdbcTemplate jdbcAccounting, String token) {
 		Table data = jdbcAccounting.query(String.format("SELECT name FROM users WHERE token = '%s'", token), (rs) -> {
 			return Table.read().db(rs);

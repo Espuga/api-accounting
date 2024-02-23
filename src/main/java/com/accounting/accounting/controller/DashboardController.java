@@ -27,11 +27,6 @@ public class DashboardController {
 	@Autowired
 	DashboardService dashboardService;
 	
-	@GetMapping("/getHome")
-	public Map<String, Object> getHome(@RequestParam("groupId") Integer groupId) {
-		return dashboardService.getHome(groupId);
-	}
-	
 	/**
 	 * RETURN TABLE & CHART DATA
 	 * @param groupId
@@ -62,16 +57,31 @@ public class DashboardController {
 		return dashboardService.getGroups(token);
 	}
 
+  /**
+   * GET SPRINTS + SPRINTS PERIODS
+   * @return
+   */
   @GetMapping("/getSprints")
   public Map<String, Object> getSprints() {
     return dashboardService.getSprints();
   }
 
+  /**
+   * UPDATE TRANSACTION INFO
+   * @param updateTransactionData
+   * @return
+   */
   @PostMapping("/updateTransaction")
   public boolean updateTransaction(@RequestBody UpdateTransactionData updateTransactionData) {
     return dashboardService.updateTransaction(updateTransactionData);
   }
 
+  /**
+   * DELETE TRANSACTION
+   * @param groupId
+   * @param id
+   * @return
+   */
   @DeleteMapping("/deleteTransaction/{groupId}/{id}")
   public boolean deleteTransaction(@PathVariable("groupId") String groupId, @PathVariable("id") String id) {
     return dashboardService.deleteTransaction(groupId, id);

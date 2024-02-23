@@ -19,44 +19,68 @@ import com.accounting.accounting.service.VmachinesService;
 @CrossOrigin(origins = "*")
 @RequestMapping("/vmachines")
 public class VmachinesController {
-    @Autowired
-    VmachinesService vmachinesService;
+  @Autowired
+  VmachinesService vmachinesService;
 
-    @GetMapping("/getSelectors")
-    public Map<String, Object> getSelectors() {
-        return vmachinesService.getSelectors();
-    }
+  /**
+   * GET VMACHINES SELECTORS
+   * @return
+   */
+  @GetMapping("/getSelectors")
+  public Map<String, Object> getSelectors() {
+    return vmachinesService.getSelectors();
+  }
 
-    @GetMapping("/getDataTable")
-    public Map<String, Object> getDataTable(
-        @RequestParam("groupId") String groupId,
-        @RequestParam("start") String start, 
-        @RequestParam("end") String end
-        ) {
-        return vmachinesService.getDataTable(groupId, start, end);
-    }
-
-    @GetMapping("/getGroupsDataTable")
-    public Map<String, Object> getGroupsDataTable(
-        @RequestParam("groupsId") String groupsId,
-        @RequestParam("start") String start, 
-        @RequestParam("end") String end
+  /**
+   * GET GROUP's PROXMOX DATA
+   * @param groupId
+   * @param start
+   * @param end
+   * @return
+   */
+  @GetMapping("/getDataTable")
+  public Map<String, Object> getDataTable(
+    @RequestParam("groupId") String groupId,
+    @RequestParam("start") String start, 
+    @RequestParam("end") String end
     ) {
-        return vmachinesService.getGroupsDataTable(groupsId, start, end);
-    }
+    return vmachinesService.getDataTable(groupId, start, end);
+  }
 
-    @PostMapping("/savePrices")
-    public boolean savePrices(@RequestBody PricesModel pricesModel){
-        return vmachinesService.savePrices(pricesModel);
-    }
+  /**
+   * TEACHER GET GROUPS DATA
+   * @param groupsId
+   * @param start
+   * @param end
+   * @return
+   */
+  @GetMapping("/getGroupsDataTable")
+  public Map<String, Object> getGroupsDataTable(
+    @RequestParam("groupsId") String groupsId,
+    @RequestParam("start") String start, 
+    @RequestParam("end") String end
+  ) {
+    return vmachinesService.getGroupsDataTable(groupsId, start, end);
+  }
 
-    @PostMapping("/doInvoice")
-    public boolean doInvoice(@RequestBody InvoiceModel invoiceModel) {
-        return vmachinesService.doInvoice(invoiceModel);
-    }
-    
-    @GetMapping("/getNMachines")
-    public Map<String, Object> getNMachines(@RequestParam("groupId") String groupId) {
-    	return vmachinesService.getNMachines(groupId);
-    }
+  /**
+   * UPDATE PRICES
+   * @param pricesModel
+   * @return
+   */
+  @PostMapping("/savePrices")
+  public boolean savePrices(@RequestBody PricesModel pricesModel){
+    return vmachinesService.savePrices(pricesModel);
+  }
+
+  /**
+   * DO INVOICE FOR EVERY GROUP
+   * @param invoiceModel
+   * @return
+   */
+  @PostMapping("/doInvoice")
+  public boolean doInvoice(@RequestBody InvoiceModel invoiceModel) {
+    return vmachinesService.doInvoice(invoiceModel);
+  }
+  
 }

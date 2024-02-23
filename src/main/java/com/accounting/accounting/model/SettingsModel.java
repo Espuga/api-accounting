@@ -362,4 +362,43 @@ public class SettingsModel {
 			return false;
 		}
 	}
+
+  /**
+   * GET THE VLAN OF THE GROUP
+   * @param jdbcAccounting
+   * @param id
+   * @return
+   */
+  public static Map<String, Object> getVlan(JdbcTemplate jdbcAccounting, Integer id) {
+    Map<String, Object> result = new HashMap<>();
+
+    try {
+      String vlan = jdbcAccounting.query(String.format("SELECT vlan FROM `groups` WHERE id = %d", id), (rs) -> {
+        return Table.read().db(rs).get(0, 0).toString();
+      });
+      result.put("vlan", vlan);
+      result.put("ok", true);
+    } catch (Exception e) {
+      System.out.println(e);
+      result.put("ok", false);
+    }
+
+    return result;
+  }
+
+  /**
+   * UPDATE GROUP VLAN
+   * @param jdbcAccounting
+   * @param saveVlanData
+   * @return
+   */
+  public static boolean saveVlan(JdbcTemplate jdbcAccounting, SaveVlanData saveVlanData) {
+		try {
+			jdbcAccounting.update("UPDATE `groups` SET vlan = ? WHERE id = ?", saveVlanData.getVlan(), saveVlanData.getGroupId());
+			return true;
+		} catch (Exception e) {
+			System.out.println(e);
+			return false;
+		}
+	}
 }

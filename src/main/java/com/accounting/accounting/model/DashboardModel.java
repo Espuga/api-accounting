@@ -1,5 +1,7 @@
 package com.accounting.accounting.model;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -17,28 +19,6 @@ import tech.tablesaw.api.Row;
 import tech.tablesaw.api.Table;
 
 public class DashboardModel {
-	
-	public static Map<String, Object> getHome(JdbcTemplate jdbcAccounting, Integer groupId) {
-		Map<String, Object> result = new HashMap<>();
-		
-		try {
-      if(!groupId.equals(0)){
-        String groupName = (String) jdbcAccounting.query(String.format("SELECT name FROM `groups` WHERE id = %d", groupId), (rs) -> {
-          return Table.read().db(rs).get(0, 0);
-        });
-        Table data = jdbcAccounting.query(String.format("SELECT SUM(amount) FROM %s", groupName), (rs) -> {
-          return Table.read().db(rs);
-        });
-        result.put("amount",data.get(0, 0));
-        result.put("ok", true);
-      }
-		} catch (Exception e) {
-			System.out.println(e);
-			result.put("ok", false);
-		}
-		
-		return result;
-	}
 	
 	/**
 	 * RETURN TABLE DATA
@@ -148,7 +128,7 @@ public class DashboardModel {
 				if(current2.isEmpty()){
 					totalData.add(0.0);
 				}else {
-					totalData.add(current2.doubleColumn("amount").sum());
+					totalData.add(new BigDecimal(current2.doubleColumn("amount").sum()).setScale(2, RoundingMode.HALF_UP).doubleValue());
 				}
 			}
 		}
@@ -199,14 +179,16 @@ public class DashboardModel {
 			});
 			
 			
-			String insertQuery = String.format("INSERT INTO %s (title, description, amount, data, userId) "
-					+ "values (?, ?, ?, ?, (SELECT id FROM users where token = '%s'))", groupName, transactionData.getToken());
+			String insertQuery = String.format("INSERT INTO %s (title, description, amount, data, userId, authorized, accepted) "
+					+ "values (?, ?, ?, ?, (SELECT id FROM users where token = '%s'), ?, ?)", groupName, transactionData.getToken());
 			jdbcAccounting.update(
 			            insertQuery,
 			            transactionData.getTitle(),
 			            transactionData.getDescription(),
 			            transactionData.getAmount(),
-			            transactionData.getDate()
+			            transactionData.getDate(),
+                  (transactionData.getAmount()>0 ? "0" : "1" ),
+                  (transactionData.getAmount()>0 ? "0" : "1" )
 			        );
 			result.put("ok", true);
 			result.put("dataTable", getDataTable(jdbcAccounting, 1));
@@ -287,6 +269,11 @@ public class DashboardModel {
     }
   }
 
+  /**
+   * GET SPRINTS + SPRINTS PERIODS
+   * @param jdbcAccounting
+   * @return
+   */
   public static Map<String, Object> getSprints(JdbcTemplate jdbcAccounting) {
     Map<String, Object> result = new HashMap<>();
 
@@ -311,6 +298,12 @@ public class DashboardModel {
     return result;
   }
 
+  /**
+   * UPDATE TRANSACTION INFO
+   * @param jdbcAccounting
+   * @param updateTransactionData
+   * @return
+   */
   public static boolean updateTransaction(JdbcTemplate jdbcAccounting, UpdateTransactionData updateTransactionData) {
     try {
       String groupName = (String) jdbcAccounting.query(String.format("SELECT name FROM `groups` WHERE id = %d", updateTransactionData.getGroupId()), (rs) -> {
@@ -334,6 +327,13 @@ public class DashboardModel {
   }
 
 
+  /**
+   * DELETE TRANSACTION
+   * @param jdbcAccounting
+   * @param groupId
+   * @param id
+   * @return
+   */
   public static boolean deleteTransaction(JdbcTemplate jdbcAccounting, String groupId, String id) {
     try  {
       String query = String.format("SELECT name FROM `groups` WHERE id = %d", Integer.parseInt(groupId));

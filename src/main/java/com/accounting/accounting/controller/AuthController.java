@@ -24,16 +24,32 @@ public class AuthController {
 	@Autowired
 	AuthService authService;
 	
+  /**
+   * LOGIN
+   * @param username
+   * @param password
+   * @return
+   */
 	@GetMapping("/login")
 	public Map<String, Object> login(@RequestParam("username") String username, @RequestParam("password") String password) {
 		return authService.login(username, password);
 	}
 	
+  /**
+   * CREATE NEW USER's ACCOUNT
+   * @param newAccountData
+   * @return
+  */
 	@PostMapping("/createAccount")
 	public Map<String, Object> createACcount(@RequestBody NewAccountData newAccountData){
 		return authService.createACcount(newAccountData);
 	}
 	
+  /**
+   * GET THE USER NAME
+   * @param token
+   * @return
+   */
 	@GetMapping("/getUsername")
 	public String getUsername(@RequestParam("token") String token) {
 		return authService.getUsername(token);
