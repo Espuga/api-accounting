@@ -29,13 +29,6 @@ public class MyConfig {
 			dataSource.setUrl(String.format("jdbc:mysql://%s:%s/%s", DB_SERVER, DB_PORT, DB_SCHEMA)); 
 			dataSource.setUsername(DB_USER);
 			dataSource.setPassword(DB_PASSWD);
-			// dataSource.setUrl("jdbc:mysql://192.168.0.121:3306/accounting"); 
-			//dataSource.setUrl("jdbc:mysql://192.168.1.48:3306/accounting"); 
-			// dataSource.setUrl("jdbc:mysql://10.23.0.80:3306/accounting2"); 
-			// dataSource.setUrl("jdbc:mysql://127.0.0.1:3306/accounting2"); 
-			// dataSource.setUsername("marc");
-			// dataSource.setPassword("perprotegir");
-			// dataSource.setPassword("marc1234");
 			return dataSource;
 		} catch (Exception e) {
 			return null;
@@ -55,13 +48,6 @@ public class MyConfig {
       dataSource.setUrl(String.format("jdbc:mysql://%s:%s/%s", DB_SERVER, DB_PORT, DB_SCHEMA_PROXMOX)); 
 			dataSource.setUsername(DB_USER);
 			dataSource.setPassword(DB_PASSWD);
-			// dataSource.setUrl("jdbc:mysql://192.168.0.121:3306/proxmox"); 
-			// dataSource.setUrl("jdbc:mysql://192.168.1.48:3306/proxmox"); 
-			// dataSource.setUrl("jdbc:mysql://10.23.0.80:3306/proxmox"); 
-			// dataSource.setUrl("jdbc:mysql://127.0.0.1:3306/proxmox"); 
-			// dataSource.setUsername("marc");
-			// dataSource.setPassword("perprotegir");
-			// dataSource.setPassword("marc1234");
 			return dataSource;
 		} catch (Exception e) {
 			return null;
