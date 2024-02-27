@@ -132,11 +132,12 @@ public class AuthModel {
         	if(data.isEmpty()) {
         		// if the username is unique
         		jdbcAccounting.update(
-        				"INSERT INTO users (username, name, password, token) VALUES (?, ?, ?, ?)",
+        				"INSERT INTO users (username, name, password, token, course) VALUES (?, ?, ?, ?, ?)",
         				newAccountData.getUsername(),
         				newAccountData.getName(),
         				encodePassword(newAccountData.getPassword()),
-        				token
+        				token,
+								newAccountData.getCourse()
         				);
         		
         		result.put("token", token);

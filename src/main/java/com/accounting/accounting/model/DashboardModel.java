@@ -190,8 +190,8 @@ public class DashboardModel {
                   (transactionData.getAmount()>0 ? "0" : "1" ),
                   (transactionData.getAmount()>0 ? "0" : "1" )
 			        );
+			// result.put("dataTable", getDataTable(jdbcAccounting, transactionData.getGroupId()));
 			result.put("ok", true);
-			result.put("dataTable", getDataTable(jdbcAccounting, 1));
 		}catch (Exception e) {
 			System.out.println(e);
 			result.put("ok", false);
