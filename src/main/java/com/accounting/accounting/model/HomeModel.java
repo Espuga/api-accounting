@@ -116,7 +116,7 @@ public class HomeModel {
       // Si es aquest sprint
       if(ara.isAfter(first) && ara.isBefore(last)){
         // Si es l'ultim divendres
-        if(ara.isEqual(last.minusDays(2))) {
+        if(ara.isEqual(first.plusDays(1))) {
 
           Table users = myAccounting.query("SELECT u.id, u.course, ug.group_id FROM users u JOIN users_groups ug ON (u.id = ug.user_id)", (rs) -> {
             return Table.read().db(rs);
@@ -130,7 +130,7 @@ public class HomeModel {
           });
 
           Table data = myAccounting.query(
-            String.format("SELECT ur.user_id, SUM(ur.hours) as hours  FROM users_projects ur  JOIN users u ON (ur.user_id = u.id) JOIN projects p ON (p.id = ur.project_id) "
+            String.format("SELECT ur.group_id, ur.user_id, SUM(ur.hours) as hours  FROM users_projects ur  JOIN users u ON (ur.user_id = u.id) JOIN projects p ON (p.id = ur.project_id) "
               + "WHERE p.data BETWEEN '%s' AND '%s' GROUP BY ur.user_id", first.toString(), last.toString()), (rs) -> {
             return Table.read().db(rs);
           });
@@ -140,29 +140,36 @@ public class HomeModel {
           List<Integer> groups = users.intColumn("group_id").unique().asList();
 
           for(Integer group : groups) {
+            // System.out.println("Group: "+group.toString());
             Double money = 0.0;
             Table usersGroup = users.where(users.intColumn("group_id").isEqualTo(group));
-            System.out.println(usersGroup);
+            // System.out.println(usersGroup);
             for(Row user : usersGroup) {
-              Table aux = data.where(data.intColumn("user_id").isEqualTo(user.getInt("id")));
-              System.out.println(aux);
+              // System.out.println("User: "+user.getInt("id"));
+              Table aux = data.where(data.intColumn("user_id").isEqualTo(user.getInt("id")).and(data.intColumn("group_id").isEqualTo(group)));
+              // System.out.println(aux);
               if(!aux.isEmpty()){
-                Double hours = Double.parseDouble(aux.get(0, 1).toString());
+                Double hours = Double.parseDouble(aux.get(0, 2).toString());
+                // System.out.println(hours);
                 money += hours*((user.getInt("course") == 1) ? priceFirstCourse : priceSecondCourse);
               }
 
-              /* if(!aux.isEmpty()){
-                System.out.println(aux);
-                System.out.println(aux.summarize("hours", AggregateFunctions.sum).apply());
-                // String hoursString = aux.summarize("hours", AggregateFunctions.sum).apply().toString();
-                // Double hours2 = Double.parseDouble(hoursString);
-                
-                // money += hours2*((user.getInt("course") == 1) ? priceFirstCourse : priceSecondCourse);
-              } */
-
             }
 
-            System.out.println(money);
+            // System.out.println("Group Money: "+money.toString());
+            String groupName = (String) myAccounting.query(String.format("SELECT name FROM `groups` WHERE id = %d", group), (rs) -> {
+              return Table.read().db(rs).get(0, 0);
+            });
+            myAccounting.update(
+              String.format("INSERT INTO %s (title, description, amount, data, userId, authorized, accepted) VALUES (?, ?, ?, ?, ?, ?, ?)", groupName),
+              "Salary",
+              "",
+              money*-1,
+              ara.toString(),
+              0,
+              1, 
+              1
+            );
           }
 
         }

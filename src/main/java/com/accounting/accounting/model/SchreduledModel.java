@@ -107,4 +107,79 @@ public class SchreduledModel {
     }
   }
 
+  @Scheduled(cron = "0 0 20 * * FRI")
+  public void provaCron() {
+    Table sprints = myAccounting.query("SELECT name, data FROM sprints", (rs) -> {
+      return Table.read().db(rs);
+    });
+    LocalDate ara = LocalDate.now();
+    
+    for(int i = 0; i < sprints.rowCount()-1; i++) {
+      LocalDate first = LocalDate.parse(sprints.get(i, 1).toString());
+      LocalDate last = LocalDate.parse(sprints.get(i+1, 1).toString()).minusDays(1);
+      // Si es aquest sprint
+      if(ara.isAfter(first) && ara.isBefore(last)){
+        // Si es l'ultim divendres
+        if(ara.isEqual(first.minusDays(2))) {
+
+          Table users = myAccounting.query("SELECT u.id, u.course, ug.group_id FROM users u JOIN users_groups ug ON (u.id = ug.user_id)", (rs) -> {
+            return Table.read().db(rs);
+          });
+
+          Double priceFirstCourse = myAccounting.query("SELECT value FROM price WHERE name = 'firstCourse'", (rs) -> {
+            return Double.parseDouble(Table.read().db(rs).get(0, 0).toString());
+          });
+          Double priceSecondCourse = myAccounting.query("SELECT value FROM price WHERE name = 'secondCourse'", (rs) -> {
+            return Double.parseDouble(Table.read().db(rs).get(0, 0).toString());
+          });
+
+          Table data = myAccounting.query(
+            String.format("SELECT ur.group_id, ur.user_id, SUM(ur.hours) as hours  FROM users_projects ur  JOIN users u ON (ur.user_id = u.id) JOIN projects p ON (p.id = ur.project_id) "
+              + "WHERE p.data BETWEEN '%s' AND '%s' GROUP BY ur.user_id", first.toString(), last.toString()), (rs) -> {
+            return Table.read().db(rs);
+          });
+
+          // System.out.println(data);
+
+          List<Integer> groups = users.intColumn("group_id").unique().asList();
+
+          for(Integer group : groups) {
+            // System.out.println("Group: "+group.toString());
+            Double money = 0.0;
+            Table usersGroup = users.where(users.intColumn("group_id").isEqualTo(group));
+            // System.out.println(usersGroup);
+            for(Row user : usersGroup) {
+              // System.out.println("User: "+user.getInt("id"));
+              Table aux = data.where(data.intColumn("user_id").isEqualTo(user.getInt("id")).and(data.intColumn("group_id").isEqualTo(group)));
+              // System.out.println(aux);
+              if(!aux.isEmpty()){
+                Double hours = Double.parseDouble(aux.get(0, 2).toString());
+                // System.out.println(hours);
+                money += hours*((user.getInt("course") == 1) ? priceFirstCourse : priceSecondCourse);
+              }
+
+            }
+
+            // System.out.println("Group Money: "+money.toString());
+            String groupName = (String) myAccounting.query(String.format("SELECT name FROM `groups` WHERE id = %d", group), (rs) -> {
+              return Table.read().db(rs).get(0, 0);
+            });
+            myAccounting.update(
+              String.format("INSERT INTO %s (title, description, amount, data, userId, authorized, accepted) VALUES (?, ?, ?, ?, ?, ?, ?)", groupName),
+              "Salary",
+              "",
+              money*-1,
+              ara.toString(),
+              0,
+              1, 
+              1
+            );
+          }
+
+        }
+      }
+    }
+    
+  }
+
 }
