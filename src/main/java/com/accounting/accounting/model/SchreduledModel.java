@@ -67,7 +67,7 @@ public class SchreduledModel {
 
   // Cada divendres, mirar la data si es a final d'sprint, cobrar
   // Cada Divendres a les 20:00
-  @Scheduled(cron = "0 0 20 * * FRI")
+  @Scheduled(cron = "0 0 8 * * WEN")
   public void autoProxmoxInvoice() {
     Table sprints = myAccounting.query("SELECT name, data FROM sprints", (rs) -> {
       return Table.read().db(rs);
@@ -80,7 +80,7 @@ public class SchreduledModel {
       // Si es aquest sprint
       if(ara.isAfter(first) && ara.isBefore(last)){
         // Si es l'ultim divendres
-        if(ara.isEqual(last.minusDays(2))) {
+        if(ara.isEqual(last.minusDays(4))) {
           String groupsIds = myAccounting.queryForList("SELECT id FROM `groups` WHERE id <> 0").stream()
             .map(value -> value.get("id").toString())
             .collect(Collectors.joining(","));
@@ -107,7 +107,7 @@ public class SchreduledModel {
     }
   }
 
-  @Scheduled(cron = "0 0 20 * * FRI")
+  @Scheduled(cron = "0 0 20 * * WEN")
   public void provaCron() {
     Table sprints = myAccounting.query("SELECT name, data FROM sprints", (rs) -> {
       return Table.read().db(rs);
@@ -120,7 +120,7 @@ public class SchreduledModel {
       // Si es aquest sprint
       if(ara.isAfter(first) && ara.isBefore(last)){
         // Si es l'ultim divendres
-        if(ara.isEqual(first.minusDays(2))) {
+        if(ara.isEqual(last.minusDays(4))) {
 
           Table users = myAccounting.query("SELECT u.id, u.course, ug.group_id FROM users u JOIN users_groups ug ON (u.id = ug.user_id)", (rs) -> {
             return Table.read().db(rs);
@@ -171,8 +171,8 @@ public class SchreduledModel {
               money*-1,
               ara.toString(),
               0,
-              1, 
-              1
+              0, 
+              0
             );
           }
 
