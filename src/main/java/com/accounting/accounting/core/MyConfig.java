@@ -13,12 +13,12 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @Configuration
 @EnableScheduling
 public class MyConfig {
-  public static final String DB_SERVER = System.getenv("DB_SERVER");
-  public static final String DB_PORT = System.getenv("DB_PORT");
-  public static final String DB_SCHEMA = System.getenv("DB_SCHEMA");
-  public static final String DB_SCHEMA_PROXMOX = System.getenv("DB_SCHEMA_PROXMOX");
-  public static final String DB_USER = System.getenv("DB_USER");
-  public static final String DB_PASSWD = System.getenv("DB_PASSWD");
+  public static final String DB_SERVER = "127.0.0.1";
+  public static final String DB_PORT = "3306";
+  public static final String DB_SCHEMA = "accounting2";
+  public static final String DB_SCHEMA_PROXMOX = "proxmox";
+  public static final String DB_USER = "marc";
+  public static final String DB_PASSWD = "marc1234";
 
 	@Bean(name = "myaccounting")
 	DataSource myAccounting() {

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.accounting.accounting.model.CreateGroupData;
 import com.accounting.accounting.model.DashboardModel;
 import com.accounting.accounting.model.RightsData;
+import com.accounting.accounting.model.SalaryData;
 import com.accounting.accounting.model.SaveVlanData;
 import com.accounting.accounting.model.SettingsModel;
 import com.accounting.accounting.model.SprintsData;
@@ -119,7 +120,24 @@ public class SettingsService {
 	public boolean saveChatId(String chatId) {
 		return SettingsModel.saveChatId(myAccounting, chatId);
 	}
-
+	
+	/**
+	 * GET TELEGRAM CHAT ID
+	 * @return
+	 */
+	public Map<String, Object> getAlertChatId() {
+		return SettingsModel.getAlertChartId(myAccounting);
+	}
+	
+	/**
+	 * SAVE TELEGRAM CHAT ID
+	 * @param chatId
+	 * @return
+	 */
+	public boolean saveAlertChatId(String chatId) {
+		return SettingsModel.saveAlertChatId(myAccounting, chatId);
+	}
+	
   /**
    * GET THE VLAN OF THE GROUP
    * @param id
@@ -136,5 +154,13 @@ public class SettingsService {
    */
   public boolean saveVlan(SaveVlanData saveVlanData) {
 		return SettingsModel.saveVlan(myAccounting, saveVlanData);
+	}
+
+	public Map<String, Object> getSalary() {
+		return SettingsModel.getSalary(myAccounting);
+	}
+
+	public boolean saveSalary(SalaryData salaryData) {
+		return SettingsModel.saveSalary(myAccounting, salaryData);
 	}
 }  

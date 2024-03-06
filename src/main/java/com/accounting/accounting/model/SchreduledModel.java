@@ -67,7 +67,7 @@ public class SchreduledModel {
 
   // Cada divendres, mirar la data si es a final d'sprint, cobrar
   // Cada Divendres a les 20:00
-  @Scheduled(cron = "0 0 8 * * WEN")
+  @Scheduled(cron = "0 0 8 * * WED")
   public void autoProxmoxInvoice() {
     Table sprints = myAccounting.query("SELECT name, data FROM sprints", (rs) -> {
       return Table.read().db(rs);
@@ -98,16 +98,37 @@ public class SchreduledModel {
             prDisk.add(Double.parseDouble(obj.get("sumDisk").toString()));
           }
 
-          InvoiceModel invoiceModel2 = new InvoiceModel(vlans.toArray(new String[vlans.size()]), prCpu.toArray(new Double[prCpu.size()]), prDisk.toArray(new Double[prDisk.size()]), "Twt@IrmUB4zTfHUC3IYGlSJwZpSjY2Bi", ara.toString());
+          InvoiceModel invoiceModel = new InvoiceModel(vlans.toArray(new String[vlans.size()]), prCpu.toArray(new Double[prCpu.size()]), prDisk.toArray(new Double[prDisk.size()]), "Twt@IrmUB4zTfHUC3IYGlSJwZpSjY2Bi", ara.toString());
 
-          VmachinesModel.doInvoice(myAccounting, invoiceModel2);
+          // VmachinesModel.doInvoice(myAccounting, invoiceModel2);
+
+          Integer i2 = 0;
+          for(String vlan : invoiceModel.getVlans()) {
+            String groupName = (String) myAccounting.query(String.format("SELECT name FROM `groups` WHERE vlan = %s", vlan), (rs) -> {
+                return Table.read().db(rs).get(0, 0);
+            });
+            
+            myAccounting.update(
+                String.format(
+                    "INSERT INTO %s (title, description, amount, data, userId, authorized, accepted) VALUES (?, ?, ?, ?, (SELECT id FROM users WHERE token = '%s'), 1, 0)", 
+                    groupName, invoiceModel.getToken()),
+                "VMachines",
+                String.format("Proxmox VMachines. CPU: %S €, Disk: %s €", invoiceModel.getPrCpu()[i2].toString(), invoiceModel.getPrDisk()[i2].toString()),
+                ((invoiceModel.getPrCpu()[i2] + invoiceModel.getPrDisk()[i2])*-1),
+                // data
+                invoiceModel.getData()
+            );
+            i++;
+        }
+
 
         }
       }
     }
   }
 
-  @Scheduled(cron = "0 0 20 * * WEN")
+  // cobrar projects
+  @Scheduled(cron = "0 0 20 * * WED")
   public void provaCron() {
     Table sprints = myAccounting.query("SELECT name, data FROM sprints", (rs) -> {
       return Table.read().db(rs);

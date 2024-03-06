@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.accounting.accounting.model.CreateGroupData;
 import com.accounting.accounting.model.RightsData;
+import com.accounting.accounting.model.SalaryData;
 import com.accounting.accounting.model.SaveVlanData;
 import com.accounting.accounting.model.SprintsData;
 import com.accounting.accounting.service.DashboardService;
@@ -144,6 +145,25 @@ public class SettingsController {
 	public boolean saveChatId(@RequestBody String chatId) {
 		return settingsService.saveChatId(chatId);
 	}
+	
+	/**
+	 * GET TELEGRAM CHAT ID
+	 * @return
+	 */
+	@GetMapping("/getAlertChatId")
+	public Map<String, Object> getAlertChatId() {
+		return settingsService.getAlertChatId();
+	}
+	
+	/**
+	 * SAVE TELEGRAM CHAT ID
+	 * @param chatId
+	 * @return
+	 */
+	@PostMapping("/saveAlertChatId")
+	public boolean saveAlertChatId(@RequestBody String chatId) {
+		return settingsService.saveAlertChatId(chatId);
+	}
 
   /**
    * GET THE VLAN OF THE GROUP
@@ -163,5 +183,15 @@ public class SettingsController {
   @PostMapping("/saveVlan")
 	public boolean saveVlan(@RequestBody SaveVlanData saveVlanData) {
 		return settingsService.saveVlan(saveVlanData);
+	}
+
+	@GetMapping("/getSalary")
+	public Map<String, Object> getSalary() {
+		return settingsService.getSalary();
+	}
+
+	@PostMapping("/saveSalary")
+	public boolean saveSalary(@RequestBody SalaryData salaryData) {
+		return settingsService.saveSalary(salaryData);
 	}
 }

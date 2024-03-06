@@ -46,7 +46,7 @@ public class ProjectsModel {
         aux.put("description", project.getString("description"));
         aux.put("data", project.getDate("data").toString());
         for(Row hour : hours) {
-          aux.put(hour.getString("username"), hour.getDouble("hours"));
+          aux.put(hour.getString("username"), new BigDecimal(hour.getDouble("hours")).setScale(2, RoundingMode.HALF_UP).doubleValue());
           Map<String, Object> userAux = new HashMap<>();
           userAux.put("name", hour.getString("name"));
           userAux.put("username", hour.getString("username"));

@@ -362,7 +362,44 @@ public class SettingsModel {
 			return false;
 		}
 	}
-
+	
+	/**
+	 * GET TELEGRAM CHAT ID
+	 * @param jdbcAccounting
+	 * @return
+	 */
+	public static Map<String, Object> getAlertChartId(JdbcTemplate jdbcAccounting) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			String chatId = jdbcAccounting.query("SELECT value FROM settings WHERE `key` = 'alertChatId'", (rs) -> {
+				return Table.read().db(rs).getString(0, 0);
+			});
+			result.put("chatId", chatId);
+			result.put("ok", true);
+		} catch (Exception e) {
+			System.out.println(e);
+			result.put("ok", false);
+		}
+		return result;
+	}
+	
+	/**
+	 * SAVE TELEGRAM CHAT ID
+	 * @param jdbcAccounting
+	 * @param chatId
+	 * @return
+	 */
+	public static boolean saveAlertChatId(JdbcTemplate jdbcAccounting, String chatId) {
+		try {
+			jdbcAccounting.update("UPDATE settings SET value = ? WHERE `key` = 'alertChatId'", chatId);
+			return true;
+		} catch (Exception e) {
+			System.out.println(e);
+			return false;
+		}
+	}
+	
   /**
    * GET THE VLAN OF THE GROUP
    * @param jdbcAccounting
@@ -400,5 +437,30 @@ public class SettingsModel {
 			System.out.println(e);
 			return false;
 		}
+	}
+
+	public static Map<String, Object> getSalary(JdbcTemplate jdbcAccounting) {
+		Map<String, Object> result = new HashMap<>();
+
+		try {
+			Table data = jdbcAccounting.query("SELECT name, value FROM price WHERE name IN ('firstCourse', 'secondCourse')", (rs) -> {
+				return Table.read().db(rs);
+			});
+
+			for(Row row : data) {
+				result.put(row.getString("name"), row.getDouble("value"));
+			}
+
+			result.put("ok", true);
+		} catch (Exception e) {
+			System.out.println(e);
+			result.put("ok", false);
+		}
+
+		return result;
+	}
+
+	public static boolean saveSalary(JdbcTemplate jdbcAccounting, SalaryData salaryData) {
+		return true;
 	}
 }
